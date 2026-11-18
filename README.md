@@ -4,6 +4,21 @@ A small web app where a finance analyst asks questions about 2025 vendor invoice
 
 FastAPI backend, React (Vite + TypeScript) frontend, Claude Opus 5.5 on AWS Bedrock.
 
+![The app answering "What are our top 5 vendors by total spend in 2025?": invoice data overview on the left, per-currency top 5 with policy evidence on the right](infographics/ui_top5.png)
+
+## Contents
+
+- [Setup](#setup)
+  - [LLM path](#llm-path)
+- [How it works](#how-it-works)
+  - [`POST /ask` response](#post-ask-response)
+- [Write-up](#write-up)
+  - [What I built and what I left out](#what-i-built-and-what-i-left-out)
+  - [How I'd evaluate it](#how-id-evaluate-it)
+  - [What production would need](#what-production-would-need)
+- [Time taken and next steps](#time-taken-and-next-steps)
+- [AI harness](#ai-harness)
+
 ## Setup
 
 Prerequisites: Python 3.12 with [uv](https://docs.astral.sh/uv/), Node 20+, and Bedrock access to Claude (or use the stub, below).
@@ -39,6 +54,8 @@ uv run python ../eval/run_eval.py  # 10-question eval against the configured LLM
 No credentials? Set `LLM_PROVIDER=stub`. The stub is a keyword router that calls the same real tools and fills a template. It handles four question shapes, is labelled in the logs, in every response (`"llm": "stub ..."`) and with a red badge in the UI.
 
 ## How it works
+
+![Architecture: browser to FastAPI to Claude, tool calls into the shared pandas data layer, and evidence built by code](infographics/invoice_qa_architecture_infographic.png)
 
 ```
 Browser --POST /ask--> FastAPI --> Claude (policy text in system prompt)

@@ -1,0 +1,130 @@
+"""Small eval set for POST /ask.
+
+Ground truth is computed here with plain pandas straight from the CSVs, independently of the app's tools,
+so a bug in the tools cannot also hide in the expected values.
+
+Run from the repo root:  cd backend && uv run python ../eval/run_eval.py
+Uses whatever LLM_PROVIDER is configured (bedrock by default). Each run makes real LLM calls.
+"""
+
+import json
+import re
+import sys
+import time
+from pathlib import Path
+
+import pandas as pd
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "backend"))
+
+from dotenv import load_dotenv  # noqa: E402
+
+load_dotenv(ROOT / "backend" / ".env")
+load_dotenv(ROOT / ".env")
+
+from fastapi.testclient import TestClient  # noqa: E402
+
+from app.main import app  # noqa: E402
+
+# ---------- independent ground truth ----------
+inv = pd.read_csv(ROOT / "backend/data/invoices_2025_clean.csv")
+ven = pd.read_csv(ROOT / "backend/data/vendor_master.csv")
+df = inv.merge(ven[["vendor_id", "country", "status"]], on="vendor_id")
+
+
+def money(x: float) -> str:
+    return f"{x:.2f}"
+
+
+spain = df[df.country == "Spain"].groupby("currency")["amount"].sum()
+top_by_cur = df.groupby(["currency", "vendor_name"])["amount"].sum().reset_index()
+top1 = {c: g.sort_values("amount", ascending=False).iloc[0] for c, g in top_by_cur.groupby("currency")}
+q1_eur = df[(df.currency == "EUR") & (df.invoice_date >= "2025-01-01") & (df.invoice_date <= "2025-03-31")]["amount"].sum()
+
+CASES = [
+    {"id": "spain_total", "q": "What is our total spend with vendors based in Spain?",
+     "status": "answered", "numbers": [money(v) for v in spain.values], "needs_data": True},
+    {"id": "top5_vendors", "q": "What are our top 5 vendors by total spend in 2025?",
+     "status": "answered", "numbers": [money(r.amount) for r in top1.values()],
+     "text": [r.vendor_name for r in top1.values()], "needs_data": True},
+    {"id": "approver_60k", "q": "Who is allowed to approve an invoice of EUR 60,000?",
+     "status": "answered", "text": ["Finance Director"], "sections": ["3"], "needs_data": False},
+    {"id": "inactive_no_approver", "q": "Which invoices from inactive vendors have no approver?",
+     "status": "answered", "invoices": sorted(df[(df.status == "INACTIVE") & df.approved_by.isna()].invoice_number),
+     "needs_data": True},
+    {"id": "on_hold_eur_50k", "q": "Which EUR invoices over 50,000 come from vendors that are on hold, and what does policy require?",
+     "status": "answered",
+     "invoices": sorted(df[(df.status == "ON_HOLD") & (df.currency == "EUR") & (df.amount > 50000)].invoice_number),
+     "sections": ["4.1"], "needs_data": True},
+    {"id": "missing_po_count", "q": "How many invoices are missing a PO number?",
+     "status": "answered", "numbers": [str(int(df.po_number.isna().sum()))], "needs_data": True},
+    {"id": "q1_eur_spend", "q": "What was our total EUR-denominated spend in Q1 2025 (January to March)?",
+     "status": "answered", "numbers": [money(q1_eur)], "needs_data": True},
+    {"id": "segregation_of_duties", "q": "Were any invoices approved by the same person who requested them?",
+     "status": "declined", "section_prefix": "7"},
+    {"id": "payment_status", "q": "Which invoices have been paid late?", "status": "declined"},
+    {"id": "fake_vendor", "q": "How much did we spend with Acme Widgets Ltd?", "no_matches": True},
+]
+
+
+def score(case: dict, status_code: int, body: dict) -> list[str]:
+    """Return a list of failed checks (empty = pass)."""
+    if status_code != 200:
+        return [f"HTTP {status_code}: {body}"]
+    fails = []
+    answer = body["answer"]
+    flat = answer.replace(",", "")
+    cited = [p["section"] for p in body["policy_evidence"]]
+    evidence_invoices = {r["invoice_number"] for d in body["data_evidence"] for r in (d["rows"] or []) if "invoice_number" in r}
+
+    if "status" in case and body["status"] != case["status"]:
+        fails.append(f"status {body['status']} != {case['status']}")
+    for n in case.get("numbers", []):
+        if n not in flat:
+            fails.append(f"number {n} not in answer")
+    for t in case.get("text", []):
+        if t.lower() not in answer.lower():
+            fails.append(f"text '{t}' not in answer")
+    for s in case.get("sections", []):
+        if s not in cited:
+            fails.append(f"section {s} not cited (cited {cited})")
+    if (p := case.get("section_prefix")) and not any(c.split(".")[0] == p for c in cited):
+        fails.append(f"no §{p}.x cited (cited {cited})")
+    if "invoices" in case:
+        if set(case["invoices"]) != evidence_invoices:
+            fails.append(f"evidence rows {sorted(evidence_invoices)} != {case['invoices']}")
+        missing = [i for i in case["invoices"] if i not in answer]
+        if missing:
+            fails.append(f"invoices not named in answer: {missing}")
+    if case.get("needs_data") is True and not body["data_evidence"]:
+        fails.append("expected a data query, none ran")
+    if case.get("needs_data") is False and body["data_evidence"]:
+        fails.append("policy-only question ran a data query")
+    if case.get("no_matches") and any(d["total_matched"] > 0 for d in body["data_evidence"]):
+        fails.append("expected no matching rows")
+    if case.get("no_matches") and re.search(r"\d{1,3}(,\d{3})+\.\d{2}", answer):
+        fails.append("answer quotes an amount for a vendor that does not exist")
+    return fails
+
+
+def main() -> None:
+    results = []
+    with TestClient(app) as client:
+        for case in CASES:
+            t = time.time()
+            r = client.post("/ask", json={"question": case["q"]})
+            fails = score(case, r.status_code, r.json())
+            results.append({"id": case["id"], "question": case["q"], "pass": not fails, "fails": fails,
+                            "seconds": round(time.time() - t, 1), "response": r.json()})
+            print(f"{'PASS' if not fails else 'FAIL'}  {case['id']:<24} {results[-1]['seconds']:>5}s  {'; '.join(fails)}")
+
+    passed = sum(r["pass"] for r in results)
+    print(f"\n{passed}/{len(results)} passed")
+    out = Path(__file__).resolve().parent / "last_run.json"
+    out.write_text(json.dumps(results, indent=2))
+    print(f"Full responses written to {out.relative_to(ROOT)}")
+
+
+if __name__ == "__main__":
+    main()

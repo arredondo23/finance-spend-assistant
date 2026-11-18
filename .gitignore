@@ -1,0 +1,13 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+node_modules/
+frontend/dist/
+.DS_Store
+.playwright-mcp/
+
+# Source pack: data is copied into backend/data; the brief is not redistributed.
+data.zip
+data_extracted/
+assignment_brief.pdf

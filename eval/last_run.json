@@ -1,0 +1,941 @@
+[
+  {
+    "id": "spain_total",
+    "question": "What is our total spend with vendors based in Spain?",
+    "pass": true,
+    "fails": [],
+    "seconds": 8.3,
+    "response": {
+      "status": "answered",
+      "answer": "Spend with Spain-based vendors (country from the vendor master) covers 49 invoices in 2025. I've reported it in each invoice's own currency:\n- EUR 1,576,971.22 across 30 invoices\n- GBP 646,618.51 across 12 invoices\n- USD 343,748.06 across 7 invoices\n\nNone of these invoices are credit notes. I can't give one combined figure. \u00a75.1 says non-EUR amounts are converted at the ECB reference rate on each invoice date, and those rates aren't in the data, so adding the currencies together isn't possible.",
+      "route": [
+        "policy",
+        "data"
+      ],
+      "policy_evidence": [
+        {
+          "section": "5.1",
+          "text": "5.1 The Group reporting currency is **EUR**. Invoices in other currencies are converted at the ECB reference rate on the invoice date for reporting purposes."
+        }
+      ],
+      "data_evidence": [
+        {
+          "tool": "aggregate",
+          "args": {
+            "metric": "sum_amount",
+            "group_by": [],
+            "filters": {
+              "vendor_country": "Spain"
+            },
+            "sort_desc": true
+          },
+          "total_matched": 49,
+          "truncated": false,
+          "rows": null,
+          "groups": [
+            {
+              "keys": {},
+              "currency": "EUR",
+              "value": 1576971.22,
+              "invoice_count": 30,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20001",
+                "INV-20004",
+                "INV-20010",
+                "INV-20011",
+                "INV-20020",
+                "INV-20023",
+                "INV-20027",
+                "INV-20035",
+                "INV-20040",
+                "INV-20044",
+                "INV-20046",
+                "INV-20056",
+                "INV-20058",
+                "INV-20062",
+                "INV-20066",
+                "INV-20067",
+                "INV-20073",
+                "INV-20075",
+                "INV-20076",
+                "INV-20078",
+                "INV-20081",
+                "INV-20085",
+                "INV-20086",
+                "INV-20090",
+                "INV-20103",
+                "INV-20114",
+                "INV-20115",
+                "INV-20122",
+                "INV-20125",
+                "INV-20136"
+              ]
+            },
+            {
+              "keys": {},
+              "currency": "GBP",
+              "value": 646618.51,
+              "invoice_count": 12,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20003",
+                "INV-20006",
+                "INV-20041",
+                "INV-20049",
+                "INV-20053",
+                "INV-20065",
+                "INV-20079",
+                "INV-20084",
+                "INV-20094",
+                "INV-20116",
+                "INV-20126",
+                "INV-20140"
+              ]
+            },
+            {
+              "keys": {},
+              "currency": "USD",
+              "value": 343748.06,
+              "invoice_count": 7,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20007",
+                "INV-20071",
+                "INV-20080",
+                "INV-20105",
+                "INV-20108",
+                "INV-20112",
+                "INV-20133"
+              ]
+            }
+          ]
+        }
+      ],
+      "warnings": [
+        "Amounts are reported per currency. No FX rates are available, so currencies are not added together."
+      ],
+      "llm": "bedrock:us.anthropic.claude-opus-5-5"
+    }
+  },
+  {
+    "id": "top5_vendors",
+    "question": "What are our top 5 vendors by total spend in 2025?",
+    "pass": true,
+    "fails": [],
+    "seconds": 10.9,
+    "response": {
+      "status": "answered",
+      "answer": "I can't give one combined top 5, because ranking vendors across currencies would mean converting to EUR. Policy \u00a75.1 says to convert at the ECB reference rate on each invoice date, and those rates aren't in the data. So here are the top 5 for each currency, covering all 140 invoices from 2025. EUR: 1) BioReagent Direct 767,778.07 (13 invoices); 2) PharmaPrint Studios 721,133.08 (11); 3) Labtech Solutions GmbH 612,043.43 (11); 4) Stellar Facilities Mgmt 443,515.01 (8); 5) Helix Consulting AG 415,196.30 (10). GBP: 1) ClinSupply Iberia S.L. 428,218.78 (8); 2) PharmaPrint Studios 202,618.32 (3); 3) Quanta Cloud Services 177,084.00 (4); 4) BioReagent Direct 128,950.37 (3); 5) Crown Travel Partners 108,643.52 (4). USD: 1) BioReagent Direct 240,480.85 (3); 2) Labtech Solutions GmbH 150,427.40 (3); 3) PharmaPrint Studios 143,052.91 (3); 4) Helix Consulting AG 132,018.79 (3); 5) Stellar Facilities Mgmt 124,729.37 (2). Helix Consulting AG's EUR and USD totals each include one credit note (a negative amount), which lowers those figures. BioReagent Direct and PharmaPrint Studios appear in the top 5 for all three currencies, but their full spend can't be combined without the FX rates.",
+      "route": [
+        "policy",
+        "data"
+      ],
+      "policy_evidence": [
+        {
+          "section": "5.1",
+          "text": "5.1 The Group reporting currency is **EUR**. Invoices in other currencies are converted at the ECB reference rate on the invoice date for reporting purposes."
+        }
+      ],
+      "data_evidence": [
+        {
+          "tool": "aggregate",
+          "args": {
+            "metric": "sum_amount",
+            "group_by": [
+              "vendor_name"
+            ],
+            "filters": {
+              "date_from": "2025-01-01",
+              "date_to": "2025-12-31"
+            },
+            "top_n": 5,
+            "sort_desc": true
+          },
+          "total_matched": 140,
+          "truncated": false,
+          "rows": null,
+          "groups": [
+            {
+              "keys": {
+                "vendor_name": "BioReagent Direct"
+              },
+              "currency": "EUR",
+              "value": 767778.07,
+              "invoice_count": 13,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20009",
+                "INV-20022",
+                "INV-20026",
+                "INV-20032",
+                "INV-20043",
+                "INV-20045",
+                "INV-20047",
+                "INV-20055",
+                "INV-20059",
+                "INV-20064",
+                "INV-20072",
+                "INV-20104",
+                "INV-20120"
+              ]
+            },
+            {
+              "keys": {
+                "vendor_name": "PharmaPrint Studios"
+              },
+              "currency": "EUR",
+              "value": 721133.08,
+              "invoice_count": 11,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20004",
+                "INV-20027",
+                "INV-20040",
+                "INV-20044",
+                "INV-20056",
+                "INV-20067",
+                "INV-20076",
+                "INV-20114",
+                "INV-20122",
+                "INV-20125",
+                "INV-20136"
+              ]
+            },
+            {
+              "keys": {
+                "vendor_name": "Labtech Solutions GmbH"
+              },
+              "currency": "EUR",
+              "value": 612043.43,
+              "invoice_count": 11,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20016",
+                "INV-20018",
+                "INV-20021",
+                "INV-20025",
+                "INV-20061",
+                "INV-20069",
+                "INV-20074",
+                "INV-20107",
+                "INV-20111",
+                "INV-20123",
+                "INV-20137"
+              ]
+            },
+            {
+              "keys": {
+                "vendor_name": "Stellar Facilities Mgmt"
+              },
+              "currency": "EUR",
+              "value": 443515.01,
+              "invoice_count": 8,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20010",
+                "INV-20011",
+                "INV-20046",
+                "INV-20058",
+                "INV-20066",
+                "INV-20078",
+                "INV-20090",
+                "INV-20115"
+              ]
+            },
+            {
+              "keys": {
+                "vendor_name": "Helix Consulting AG"
+              },
+              "currency": "EUR",
+              "value": 415196.3,
+              "invoice_count": 10,
+              "credit_note_count": 1,
+              "invoice_numbers": [
+                "INV-20005",
+                "INV-20029",
+                "INV-20048",
+                "INV-20052",
+                "INV-20068",
+                "INV-20087",
+                "INV-20101",
+                "INV-20113",
+                "INV-20135",
+                "INV-20138"
+              ]
+            },
+            {
+              "keys": {
+                "vendor_name": "ClinSupply Iberia S.L."
+              },
+              "currency": "GBP",
+              "value": 428218.78,
+              "invoice_count": 8,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20003",
+                "INV-20041",
+                "INV-20049",
+                "INV-20053",
+                "INV-20065",
+                "INV-20084",
+                "INV-20094",
+                "INV-20116"
+              ]
+            },
+            {
+              "keys": {
+                "vendor_name": "PharmaPrint Studios"
+              },
+              "currency": "GBP",
+              "value": 202618.32,
+              "invoice_count": 3,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20006",
+                "INV-20079",
+                "INV-20126"
+              ]
+            },
+            {
+              "keys": {
+                "vendor_name": "Quanta Cloud Services"
+              },
+              "currency": "GBP",
+              "value": 177084.0,
+              "invoice_count": 4,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20008",
+                "INV-20050",
+                "INV-20088",
+                "INV-20093"
+              ]
+            },
+            {
+              "keys": {
+                "vendor_name": "BioReagent Direct"
+              },
+              "currency": "GBP",
+              "value": 128950.37,
+              "invoice_count": 3,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20034",
+                "INV-20060",
+                "INV-20089"
+              ]
+            },
+            {
+              "keys": {
+                "vendor_name": "Crown Travel Partners"
+              },
+              "currency": "GBP",
+              "value": 108643.52,
+              "invoice_count": 4,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20002",
+                "INV-20028",
+                "INV-20118",
+                "INV-20124"
+              ]
+            },
+            {
+              "keys": {
+                "vendor_name": "BioReagent Direct"
+              },
+              "currency": "USD",
+              "value": 240480.85,
+              "invoice_count": 3,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20033",
+                "INV-20099",
+                "INV-20110"
+              ]
+            },
+            {
+              "keys": {
+                "vendor_name": "Labtech Solutions GmbH"
+              },
+              "currency": "USD",
+              "value": 150427.4,
+              "invoice_count": 3,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20036",
+                "INV-20037",
+                "INV-20095"
+              ]
+            },
+            {
+              "keys": {
+                "vendor_name": "PharmaPrint Studios"
+              },
+              "currency": "USD",
+              "value": 143052.91,
+              "invoice_count": 3,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20071",
+                "INV-20108",
+                "INV-20112"
+              ]
+            },
+            {
+              "keys": {
+                "vendor_name": "Helix Consulting AG"
+              },
+              "currency": "USD",
+              "value": 132018.79,
+              "invoice_count": 3,
+              "credit_note_count": 1,
+              "invoice_numbers": [
+                "INV-20070",
+                "INV-20096",
+                "INV-20131"
+              ]
+            },
+            {
+              "keys": {
+                "vendor_name": "Stellar Facilities Mgmt"
+              },
+              "currency": "USD",
+              "value": 124729.37,
+              "invoice_count": 2,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20007",
+                "INV-20080"
+              ]
+            }
+          ]
+        }
+      ],
+      "warnings": [
+        "Amounts are reported per currency. No FX rates are available, so currencies are not added together.",
+        "Totals include 2 credit note(s) (negative amounts)."
+      ],
+      "llm": "bedrock:us.anthropic.claude-opus-5-5"
+    }
+  },
+  {
+    "id": "approver_60k",
+    "question": "Who is allowed to approve an invoice of EUR 60,000?",
+    "pass": true,
+    "fails": [],
+    "seconds": 3.6,
+    "response": {
+      "status": "answered",
+      "answer": "Under the approval threshold table in \u00a73, an invoice of EUR 60,000 is in the EUR 50,000.01 \u2013 250,000 band, so the Finance Director must approve it. Under \u00a73.1, the approval is recorded in the approved_by field. An invoice with no approver record must be held and may not be paid. The approver also cannot be the person who requested the purchase (\u00a77.1), and no one may approve their own purchase at any amount (\u00a77.2).",
+      "route": [
+        "policy"
+      ],
+      "policy_evidence": [
+        {
+          "section": "3",
+          "text": "## 3. Approval Thresholds\n| Invoice / PO Value (EUR) | Required Approver |\n|---|---|\n| Up to 5,000 | Cost Center Owner |\n| 5,000.01 \u2013 50,000 | Department Head |\n| 50,000.01 \u2013 250,000 | Finance Director |\n| Above 250,000 | CFO + Procurement Excellence review |\n\n3.1 Approval is evidenced by the `approved_by` field in the invoice processing system. Invoices lacking an approver record must be held and may not be paid."
+        },
+        {
+          "section": "3.1",
+          "text": "3.1 Approval is evidenced by the `approved_by` field in the invoice processing system. Invoices lacking an approver record must be held and may not be paid."
+        },
+        {
+          "section": "7.1",
+          "text": "7.1 The person approving an invoice may not be the requester of the underlying purchase."
+        },
+        {
+          "section": "7.2",
+          "text": "7.2 Self-approval is prohibited at all thresholds."
+        }
+      ],
+      "data_evidence": [],
+      "warnings": [],
+      "llm": "bedrock:us.anthropic.claude-opus-5-5"
+    }
+  },
+  {
+    "id": "inactive_no_approver",
+    "question": "Which invoices from inactive vendors have no approver?",
+    "pass": true,
+    "fails": [],
+    "seconds": 9.5,
+    "response": {
+      "status": "answered",
+      "answer": "Three invoices from INACTIVE vendors have no approver. All three are from PharmaPrint Studios (V-1006, Spain, Marketing Services), and each has a PO number:\n- INV-20136 (2025-09-22, Cloud hosting): EUR 16,820.43, CC-RND-210, PO-71421\n- INV-20056 (2025-08-04, Marketing materials): EUR 82,190.82, CC-FIN-100, PO-73073\n- INV-20108 (2025-07-26, Facilities services): USD 41,611.73, CC-FIN-100, PO-73060\n\nThese invoices fail two policy rules:\n1. With no approver on record, all three must be held and may not be paid (\u00a73.1).\n2. Because the vendor is INACTIVE, they must be escalated to Procurement Excellence before processing (\u00a74.1).\n\nUnder the approval table (\u00a73), INV-20136 would need a Department Head and INV-20056 would need the Finance Director. The thresholds are in EUR, so INV-20108 (USD) would first need converting at the ECB rate on its invoice date (\u00a75.1). That rate isn't in the data, so I can't say which approver level it needs.",
+      "route": [
+        "policy",
+        "data"
+      ],
+      "policy_evidence": [
+        {
+          "section": "3",
+          "text": "## 3. Approval Thresholds\n| Invoice / PO Value (EUR) | Required Approver |\n|---|---|\n| Up to 5,000 | Cost Center Owner |\n| 5,000.01 \u2013 50,000 | Department Head |\n| 50,000.01 \u2013 250,000 | Finance Director |\n| Above 250,000 | CFO + Procurement Excellence review |\n\n3.1 Approval is evidenced by the `approved_by` field in the invoice processing system. Invoices lacking an approver record must be held and may not be paid."
+        },
+        {
+          "section": "3.1",
+          "text": "3.1 Approval is evidenced by the `approved_by` field in the invoice processing system. Invoices lacking an approver record must be held and may not be paid."
+        },
+        {
+          "section": "4.1",
+          "text": "4.1 Payments may only be made to vendors with **ACTIVE** status in the Vendor Master. Invoices from vendors with status **ON_HOLD** or **INACTIVE** must be escalated to Procurement Excellence before processing."
+        },
+        {
+          "section": "5.1",
+          "text": "5.1 The Group reporting currency is **EUR**. Invoices in other currencies are converted at the ECB reference rate on the invoice date for reporting purposes."
+        }
+      ],
+      "data_evidence": [
+        {
+          "tool": "query_invoices",
+          "args": {
+            "filters": {
+              "vendor_status": "INACTIVE",
+              "has_approver": false
+            },
+            "sort_by": "invoice_date",
+            "sort_desc": true,
+            "limit": 50
+          },
+          "total_matched": 3,
+          "truncated": false,
+          "rows": [
+            {
+              "invoice_number": "INV-20136",
+              "invoice_date": "2025-09-22",
+              "vendor_id": "V-1006",
+              "vendor_name": "PharmaPrint Studios",
+              "vendor_country": "Spain",
+              "vendor_category": "Marketing Services",
+              "vendor_status": "INACTIVE",
+              "description": "Cloud hosting",
+              "amount": 16820.43,
+              "currency": "EUR",
+              "cost_center": "CC-RND-210",
+              "po_number": "PO-71421",
+              "approved_by": null,
+              "is_credit_note": false
+            },
+            {
+              "invoice_number": "INV-20056",
+              "invoice_date": "2025-08-04",
+              "vendor_id": "V-1006",
+              "vendor_name": "PharmaPrint Studios",
+              "vendor_country": "Spain",
+              "vendor_category": "Marketing Services",
+              "vendor_status": "INACTIVE",
+              "description": "Marketing materials",
+              "amount": 82190.82,
+              "currency": "EUR",
+              "cost_center": "CC-FIN-100",
+              "po_number": "PO-73073",
+              "approved_by": null,
+              "is_credit_note": false
+            },
+            {
+              "invoice_number": "INV-20108",
+              "invoice_date": "2025-07-26",
+              "vendor_id": "V-1006",
+              "vendor_name": "PharmaPrint Studios",
+              "vendor_country": "Spain",
+              "vendor_category": "Marketing Services",
+              "vendor_status": "INACTIVE",
+              "description": "Facilities services",
+              "amount": 41611.73,
+              "currency": "USD",
+              "cost_center": "CC-FIN-100",
+              "po_number": "PO-73060",
+              "approved_by": null,
+              "is_credit_note": false
+            }
+          ],
+          "groups": null
+        }
+      ],
+      "warnings": [],
+      "llm": "bedrock:us.anthropic.claude-opus-5-5"
+    }
+  },
+  {
+    "id": "on_hold_eur_50k",
+    "question": "Which EUR invoices over 50,000 come from vendors that are on hold, and what does policy require?",
+    "pass": true,
+    "fails": [],
+    "seconds": 11.4,
+    "response": {
+      "status": "answered",
+      "answer": "I found 4 EUR invoices over 50,000 from vendors on hold, and all 4 are listed below. I only checked invoices in EUR, not GBP or USD. All 4 come from Crown Travel Partners (V-1010, UK, Travel), which has ON_HOLD status:\n- INV-20083 (2025-05-28): EUR 57,924.90, PO-75062, approved by m.garcia\n- INV-20127 (2025-09-28): EUR 56,778.97, PO-70841, approved by l.chen\n- INV-20130 (2025-10-08): EUR 53,097.78, PO-78011, approved by a.kowalski\n- INV-20106 (2025-07-02): EUR 51,953.02, PO-77840, approved by r.okafor\n\nWhat the policy requires:\n- Vendor status (\u00a74.1): only ACTIVE vendors may be paid. Invoices from ON_HOLD vendors must be escalated to Procurement Excellence before they are processed. That applies to all 4 invoices.\n- Approval level (\u00a73): each invoice is between EUR 50,000.01 and 250,000, so it needs Finance Director approval. Each one has an approver recorded (\u00a73.1), but the data doesn't show approvers' roles, so I can't confirm whether m.garcia, l.chen, a.kowalski or r.okafor is a Finance Director.\n- Purchase order (\u00a72.1): all 4 have a PO number. The data doesn't show whether each PO was issued before work began.\n- Segregation of duties (\u00a77): I can't check this, because the data has no requester field.\n\nSeparately, some descriptions (equipment maintenance, statistical analysis, software licence) don't fit a vendor categorised as Travel. That may be worth raising when the invoices are escalated.",
+      "route": [
+        "policy",
+        "data"
+      ],
+      "policy_evidence": [
+        {
+          "section": "4.1",
+          "text": "4.1 Payments may only be made to vendors with **ACTIVE** status in the Vendor Master. Invoices from vendors with status **ON_HOLD** or **INACTIVE** must be escalated to Procurement Excellence before processing."
+        },
+        {
+          "section": "3",
+          "text": "## 3. Approval Thresholds\n| Invoice / PO Value (EUR) | Required Approver |\n|---|---|\n| Up to 5,000 | Cost Center Owner |\n| 5,000.01 \u2013 50,000 | Department Head |\n| 50,000.01 \u2013 250,000 | Finance Director |\n| Above 250,000 | CFO + Procurement Excellence review |\n\n3.1 Approval is evidenced by the `approved_by` field in the invoice processing system. Invoices lacking an approver record must be held and may not be paid."
+        },
+        {
+          "section": "3.1",
+          "text": "3.1 Approval is evidenced by the `approved_by` field in the invoice processing system. Invoices lacking an approver record must be held and may not be paid."
+        },
+        {
+          "section": "2.1",
+          "text": "2.1 All purchases of goods or services with a value of **EUR 1,000 or above** require an approved Purchase Order (PO) issued **before** the supplier begins work or ships goods."
+        },
+        {
+          "section": "7",
+          "text": "## 7. Segregation of Duties\n7.1 The person approving an invoice may not be the requester of the underlying purchase.\n\n7.2 Self-approval is prohibited at all thresholds."
+        }
+      ],
+      "data_evidence": [
+        {
+          "tool": "query_invoices",
+          "args": {
+            "filters": {
+              "vendor_status": "ON_HOLD",
+              "currency": "EUR",
+              "min_amount": 50000.0
+            },
+            "sort_by": "amount",
+            "sort_desc": true,
+            "limit": 50
+          },
+          "total_matched": 4,
+          "truncated": false,
+          "rows": [
+            {
+              "invoice_number": "INV-20083",
+              "invoice_date": "2025-05-28",
+              "vendor_id": "V-1010",
+              "vendor_name": "Crown Travel Partners",
+              "vendor_country": "UK",
+              "vendor_category": "Travel",
+              "vendor_status": "ON_HOLD",
+              "description": "Equipment maintenance",
+              "amount": 57924.9,
+              "currency": "EUR",
+              "cost_center": "CC-COM-440",
+              "po_number": "PO-75062",
+              "approved_by": "m.garcia",
+              "is_credit_note": false
+            },
+            {
+              "invoice_number": "INV-20127",
+              "invoice_date": "2025-09-28",
+              "vendor_id": "V-1010",
+              "vendor_name": "Crown Travel Partners",
+              "vendor_country": "UK",
+              "vendor_category": "Travel",
+              "vendor_status": "ON_HOLD",
+              "description": "Statistical analysis support",
+              "amount": 56778.97,
+              "currency": "EUR",
+              "cost_center": "CC-COM-440",
+              "po_number": "PO-70841",
+              "approved_by": "l.chen",
+              "is_credit_note": false
+            },
+            {
+              "invoice_number": "INV-20130",
+              "invoice_date": "2025-10-08",
+              "vendor_id": "V-1010",
+              "vendor_name": "Crown Travel Partners",
+              "vendor_country": "UK",
+              "vendor_category": "Travel",
+              "vendor_status": "ON_HOLD",
+              "description": "Equipment maintenance",
+              "amount": 53097.78,
+              "currency": "EUR",
+              "cost_center": "CC-OPS-330",
+              "po_number": "PO-78011",
+              "approved_by": "a.kowalski",
+              "is_credit_note": false
+            },
+            {
+              "invoice_number": "INV-20106",
+              "invoice_date": "2025-07-02",
+              "vendor_id": "V-1010",
+              "vendor_name": "Crown Travel Partners",
+              "vendor_country": "UK",
+              "vendor_category": "Travel",
+              "vendor_status": "ON_HOLD",
+              "description": "Software licence renewal",
+              "amount": 51953.02,
+              "currency": "EUR",
+              "cost_center": "CC-COM-440",
+              "po_number": "PO-77840",
+              "approved_by": "r.okafor",
+              "is_credit_note": false
+            }
+          ],
+          "groups": null
+        }
+      ],
+      "warnings": [],
+      "llm": "bedrock:us.anthropic.claude-opus-5-5"
+    }
+  },
+  {
+    "id": "missing_po_count",
+    "question": "How many invoices are missing a PO number?",
+    "pass": true,
+    "fails": [],
+    "seconds": 8.8,
+    "response": {
+      "status": "answered",
+      "answer": "21 of the 2025 invoices have no PO number: INV-20010, INV-20012, INV-20014, INV-20016, INV-20023, INV-20024, INV-20025, INV-20032, INV-20039, INV-20042, INV-20052, INV-20057, INV-20067, INV-20077, INV-20089, INV-20094, INV-20113, INV-20118, INV-20122, INV-20123 and INV-20128. None of them are credit notes. Under \u00a72.1, any purchase of EUR 1,000 or more needs a PO. Under \u00a72.2, invoices above that amount with no PO count as maverick spend. They must be flagged to the Cost Center owner and reported every quarter to the Finance Controls Committee. This count does not check which of the 21 are above EUR 1,000. Any in GBP or USD would first need converting at the ECB rate (\u00a75.1), and that rate isn't in the data. Some could also be covered by a blanket PO (\u00a72.3) or an emergency exception (\u00a79.1), but the data can't show that.",
+      "route": [
+        "policy",
+        "data"
+      ],
+      "policy_evidence": [
+        {
+          "section": "2.1",
+          "text": "2.1 All purchases of goods or services with a value of **EUR 1,000 or above** require an approved Purchase Order (PO) issued **before** the supplier begins work or ships goods."
+        },
+        {
+          "section": "2.2",
+          "text": "2.2 Invoices received without a valid PO reference (\"maverick spend\") above the EUR 1,000 threshold must be flagged to the Cost Center owner and reported quarterly to the Finance Controls Committee."
+        },
+        {
+          "section": "2.3",
+          "text": "2.3 Recurring services (e.g., cloud hosting, facilities) may operate under a blanket PO, renewed annually."
+        },
+        {
+          "section": "5.1",
+          "text": "5.1 The Group reporting currency is **EUR**. Invoices in other currencies are converted at the ECB reference rate on the invoice date for reporting purposes."
+        },
+        {
+          "section": "9.1",
+          "text": "9.1 Emergency purchases (patient safety, business continuity) may bypass the PO requirement with retrospective approval within 5 business days, documented via the Exception Register."
+        }
+      ],
+      "data_evidence": [
+        {
+          "tool": "aggregate",
+          "args": {
+            "metric": "count",
+            "group_by": [],
+            "filters": {
+              "has_po": false
+            },
+            "sort_desc": true
+          },
+          "total_matched": 21,
+          "truncated": false,
+          "rows": null,
+          "groups": [
+            {
+              "keys": {},
+              "currency": null,
+              "value": 21,
+              "invoice_count": 21,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20010",
+                "INV-20012",
+                "INV-20014",
+                "INV-20016",
+                "INV-20023",
+                "INV-20024",
+                "INV-20025",
+                "INV-20032",
+                "INV-20039",
+                "INV-20042",
+                "INV-20052",
+                "INV-20057",
+                "INV-20067",
+                "INV-20077",
+                "INV-20089",
+                "INV-20094",
+                "INV-20113",
+                "INV-20118",
+                "INV-20122",
+                "INV-20123",
+                "INV-20128"
+              ]
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "llm": "bedrock:us.anthropic.claude-opus-5-5"
+    }
+  },
+  {
+    "id": "q1_eur_spend",
+    "question": "What was our total EUR-denominated spend in Q1 2025 (January to March)?",
+    "pass": true,
+    "fails": [],
+    "seconds": 6.6,
+    "response": {
+      "status": "answered",
+      "answer": "Total spend on invoices billed in EUR in Q1 2025 (invoice dates 1 January to 31 March 2025) was EUR 1,186,505.33, across 23 invoices. None of them are credit notes. This covers EUR invoices only: GBP and USD invoices are left out because the data has no FX rates. Converting them would need the ECB reference rate for each invoice date (\u00a75.1), so a Group-wide total in EUR can't be calculated. I can give Q1 totals for GBP and USD separately if you need them.",
+      "route": [
+        "policy",
+        "data"
+      ],
+      "policy_evidence": [
+        {
+          "section": "5.1",
+          "text": "5.1 The Group reporting currency is **EUR**. Invoices in other currencies are converted at the ECB reference rate on the invoice date for reporting purposes."
+        }
+      ],
+      "data_evidence": [
+        {
+          "tool": "aggregate",
+          "args": {
+            "metric": "sum_amount",
+            "group_by": [],
+            "filters": {
+              "currency": "EUR",
+              "date_from": "2025-01-01",
+              "date_to": "2025-03-31"
+            },
+            "sort_desc": true
+          },
+          "total_matched": 23,
+          "truncated": false,
+          "rows": null,
+          "groups": [
+            {
+              "keys": {},
+              "currency": "EUR",
+              "value": 1186505.33,
+              "invoice_count": 23,
+              "credit_note_count": 0,
+              "invoice_numbers": [
+                "INV-20001",
+                "INV-20005",
+                "INV-20009",
+                "INV-20010",
+                "INV-20013",
+                "INV-20016",
+                "INV-20018",
+                "INV-20020",
+                "INV-20027",
+                "INV-20038",
+                "INV-20039",
+                "INV-20054",
+                "INV-20072",
+                "INV-20073",
+                "INV-20081",
+                "INV-20085",
+                "INV-20090",
+                "INV-20102",
+                "INV-20103",
+                "INV-20104",
+                "INV-20109",
+                "INV-20119",
+                "INV-20134"
+              ]
+            }
+          ]
+        }
+      ],
+      "warnings": [],
+      "llm": "bedrock:us.anthropic.claude-opus-5-5"
+    }
+  },
+  {
+    "id": "segregation_of_duties",
+    "question": "Were any invoices approved by the same person who requested them?",
+    "pass": true,
+    "fails": [],
+    "seconds": 4.5,
+    "response": {
+      "status": "declined",
+      "answer": "I can't answer this from the available data. The invoice records have an approver field (approved_by) but no requester field, so I can't compare the two or spot self-approval. The rules in \u00a77.1 (the approver may not be the requester) and \u00a77.2 (self-approval is prohibited at all thresholds) therefore can't be tested here. I also won't guess who the requester was from cost centers or approvers. I can help with related checks instead: listing invoices that have no approver (\u00a73.1), checking whether an invoice's approver matches the level required for its amount in the \u00a73 table (thresholds are in EUR, so GBP and USD invoices would need conversion first), or breaking invoices down by approver.",
+      "route": [
+        "policy"
+      ],
+      "policy_evidence": [
+        {
+          "section": "7.1",
+          "text": "7.1 The person approving an invoice may not be the requester of the underlying purchase."
+        },
+        {
+          "section": "7.2",
+          "text": "7.2 Self-approval is prohibited at all thresholds."
+        }
+      ],
+      "data_evidence": [],
+      "warnings": [],
+      "llm": "bedrock:us.anthropic.claude-opus-5-5"
+    }
+  },
+  {
+    "id": "payment_status",
+    "question": "Which invoices have been paid late?",
+    "pass": true,
+    "fails": [],
+    "seconds": 4.4,
+    "response": {
+      "status": "declined",
+      "answer": "I can't tell which invoices were paid late. The data has no payment status, payment dates or receipt dates. The invoice records only include the invoice date, vendor, description, amount, currency, cost center, PO number and approver. Without those dates, I can't check invoices against the standard 60-days-net terms in \u00a75.2, which run from invoice receipt, not from the invoice date. Here is what I can answer instead: which invoices have no approver and must be held (\u00a73.1), which have no PO at or above EUR 1,000 (\u00a72.1\u20132.2), which come from ON_HOLD or INACTIVE vendors and need escalation (\u00a74.1), and which are credit notes (\u00a76.1).",
+      "route": [
+        "policy"
+      ],
+      "policy_evidence": [
+        {
+          "section": "5.2",
+          "text": "5.2 Standard payment terms are **60 days net** from invoice receipt. Early-payment discounts above 2% require Treasury approval."
+        }
+      ],
+      "data_evidence": [],
+      "warnings": [],
+      "llm": "bedrock:us.anthropic.claude-opus-5-5"
+    }
+  },
+  {
+    "id": "fake_vendor",
+    "question": "How much did we spend with Acme Widgets Ltd?",
+    "pass": true,
+    "fails": [],
+    "seconds": 8.1,
+    "response": {
+      "status": "answered",
+      "answer": "I couldn't find any spend with Acme Widgets Ltd. No vendor with \"Acme\" in its name is in the vendor master, and no 2025 invoices match that vendor name, so I have no spend to report. The vendor may be listed under a different legal or trading name. If you know the vendor ID or another name for it, I can search again, or I can list all vendors in the master for you to check.",
+      "route": [
+        "data"
+      ],
+      "policy_evidence": [],
+      "data_evidence": [
+        {
+          "tool": "aggregate",
+          "args": {
+            "metric": "sum_amount",
+            "group_by": [],
+            "filters": {
+              "vendor_name": "Acme Widgets"
+            },
+            "sort_desc": true
+          },
+          "total_matched": 0,
+          "truncated": false,
+          "rows": null,
+          "groups": []
+        },
+        {
+          "tool": "get_vendors",
+          "args": {
+            "filters": {
+              "vendor_name": "Acme"
+            }
+          },
+          "total_matched": 0,
+          "truncated": false,
+          "rows": [],
+          "groups": null
+        }
+      ],
+      "warnings": [],
+      "llm": "bedrock:us.anthropic.claude-opus-5-5"
+    }
+  }
+]

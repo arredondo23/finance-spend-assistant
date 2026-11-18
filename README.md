@@ -93,26 +93,26 @@ Browser --POST /ask--> FastAPI --> Claude (policy text in system prompt)
 
 ### What I built and what I left out
 
-I put most of the time into grounding and evidence, because a finance tool that is wrong with confidence is worse than none. The model can't compute or invent numbers: totals come from `aggregate`, every group carries the invoice numbers behind it (the lineage §8.2 asks for), and policy quotes are pulled from the file by section ID. For the optional extra I picked the eval set, since the deterministic tools make ground truth cheap and it backs the evaluation section below.
+A simple prototype. Nothing fancy, but it works.
 
-Left out on purpose: auth, Docker, deployment, chat history, streaming responses and visual polish (the brief says so), plus a vector store (not needed at 50 lines). I also left out FX conversion. A static rate table would be an invented assumption in a compliance context, so the app reports per currency and says why. Segregation of duties (§7) is declined because the data has no requester field, and payment status is declined because there is no payment column.
+I spent most of the time thinking about the right architecture. Determinism is very important here, so the LLM has a narrow job: it translates the user's question into a call to one of three fixed tools (`query_invoices`, `aggregate`, `get_vendors`) and fills in the right parameters. It decides which tool to call and with what, but it can't create functions, code or SQL on the fly. If it could, the same question asked several times could end up with different answers. I didn't want that behaviour.
 
-Two model notes. Opus 5.5 rejects `temperature`, so there is no "temperature 0". Repeatability comes from the fixed tools and the JSON output schema. Effort is set to `low`, which kept the eval at 10/10 with answers in 3.6 to 11.4 seconds.
+I left out auth, Docker, deployment, chat history, streaming responses, visual polish and FX conversion. Most of the questions in the assignment can be answered without them.
 
 ### How I'd evaluate it
 
-- **Ground-truth questions.** `eval/test_eval.py` has 10 questions, one pytest each. Expected values are computed with plain pandas from the CSVs, independently of the app's tools. It checks exact figures in the answer, that the evidence rows match the expected invoice set, required policy citations, that policy-only questions run no query, and that unanswerable questions are declined. Current result: 10/10.
-- **Hallucination checks I'd add next.** Extract every number and invoice ID from the answer and confirm each appears in that response's tool results (cheap, deterministic, runs on every request). Track the rate of dropped citations. Measure over-citation too: the model sometimes cites more sections than it needs (§5.1 and §9.1 on a missing-PO count).
-- **Decline rate,** split into correct and wrong declines, from a labelled set of answerable and unanswerable questions.
-- **Human spot checks.** A finance analyst reviews a weekly sample of real questions with their evidence panels, and the disagreements become new eval cases. I would run the eval in CI on every prompt or tool change.
+Two different sets of evals.
+
+The first is evals written as pytests, for questions where we know the expected answer. Here we can simply assert that a given number, invoice ID or word is in the answer. That's what [`eval/test_eval.py`](eval/test_eval.py) does today: 10 questions, with the expected values computed in plain pandas from the CSVs, independently of the app's tools.
+
+The second set is harder and needs an LLM-as-a-judge. These are the checks you can't simply assert: how the assistant writes the answer to the user, or whether it declines for a good reason backed up by the policy. The judge needs a scoring rubric that spells out the criteria and how to score the assistant's answer against each one.
 
 ### What production would need
 
-- **Real data and access control.** Replace the CSVs with read-only queries against the finance warehouse. Enforce row-level security per user (entity, cost center) in the tool layer, not the prompt, so the model can only see rows the user may see. SSO for the 200 users.
-- **Audit trail (§8.2).** Persist every question, user, model ID, prompt version, tool call with arguments, returned invoice IDs and the final answer. Today this is only in the logs. Evidence is already structured, so this is a write per request.
-- **FX.** Load ECB reference rates by date so EUR-converted totals and threshold checks on GBP and USD invoices become possible, labelled as converted.
-- **Cost and latency.** Prompt-cache the system prompt and tool definitions (identical on every call). Route simple lookups to a smaller model and measure quality with the eval before switching. Add per-user rate limits and a spend dashboard.
-- **Operations.** Streaming answers, retries with backoff, a real database for conversations, and versioned prompts with the eval as a release gate.
+Probably no pandas for the data, SQL queries instead. The tools stay fixed; they'd just run parameterised SQL rather than pandas filters.
+
+- **Real data and access control.** Replace the CSVs with read-only queries against the finance warehouse. Enforce row-level security per user (entity, cost center) in the tool layer, not in the prompt, so the model only sees rows the user is allowed to see. SSO for the 200 users.
+- **Audit trail (§8.2).** Persist every question, user, model ID, prompt version, tool call with arguments, returned invoice IDs and the final answer. Today this only lives in the logs. The evidence is already structured, so it's one write per request.
 
 ## Time taken and next steps
 

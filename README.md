@@ -43,8 +43,8 @@ Tests and eval:
 
 ```bash
 cd backend
-uv run pytest                      # data ground truths, citation checker, API contract (no LLM needed)
-uv run python ../eval/run_eval.py  # 10-question eval against the configured LLM (makes real calls)
+uv run pytest             # data ground truths, citation checker, API contract (no LLM needed)
+uv run pytest ../eval -v  # 10-question eval, one test per question (makes real Bedrock calls)
 ```
 
 ### LLM path
@@ -101,7 +101,7 @@ Two model notes. Opus 5.5 rejects `temperature`, so there is no "temperature 0".
 
 ### How I'd evaluate it
 
-- **Ground-truth questions.** `eval/run_eval.py` has 10 questions. Expected values are computed with plain pandas from the CSVs, independently of the app's tools. It checks exact figures in the answer, that the evidence rows match the expected invoice set, required policy citations, that policy-only questions run no query, and that unanswerable questions are declined. Current result: 10/10.
+- **Ground-truth questions.** `eval/test_eval.py` has 10 questions, one pytest each. Expected values are computed with plain pandas from the CSVs, independently of the app's tools. It checks exact figures in the answer, that the evidence rows match the expected invoice set, required policy citations, that policy-only questions run no query, and that unanswerable questions are declined. Current result: 10/10.
 - **Hallucination checks I'd add next.** Extract every number and invoice ID from the answer and confirm each appears in that response's tool results (cheap, deterministic, runs on every request). Track the rate of dropped citations. Measure over-citation too: the model sometimes cites more sections than it needs (§5.1 and §9.1 on a missing-PO count).
 - **Decline rate,** split into correct and wrong declines, from a labelled set of answerable and unanswerable questions.
 - **Human spot checks.** A finance analyst reviews a weekly sample of real questions with their evidence panels, and the disagreements become new eval cases. I would run the eval in CI on every prompt or tool change.

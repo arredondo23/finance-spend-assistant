@@ -101,7 +101,7 @@ Two model notes. Opus 5.5 rejects `temperature`, so there is no "temperature 0".
 
 ## Time taken and next steps
 
-Planning took about 40 minutes across two sessions (timestamps in `ai_harness/planning_conversation.md`). The build session, from scaffold to eval and README, took about TODO hours.
+Planning took about 40 minutes across two sessions (timestamps in `ai_harness/planning_conversation.md`). The build session, from scaffold to eval, README and repo setup, took about 45 minutes ([`ai_harness/build_session.md`](ai_harness/build_session.md)). Planning ran on Claude Sonnet 5.5 and the build on Claude Opus 5.5.
 
 Next steps, in order: number and ID verification against tool results on every answer; a dated FX table so currencies can be combined with a visible label; a tighter citation rule in the prompt to cut over-citing; persisting the audit record per request; streaming.
 
@@ -111,7 +111,7 @@ I built this with Claude Code. Everything the brief asks for is in the repo:
 
 - [`ai_harness/planning_conversation.md`](ai_harness/planning_conversation.md): the planning conversation, where the design decisions were made
 - [`ai_harness/implementation_plan.md`](ai_harness/implementation_plan.md): the handoff plan the build followed
-- [`ai_harness/`](ai_harness/): build session logs
+- [`ai_harness/build_session.md`](ai_harness/build_session.md): the build session log (Claude Opus 5.5; planning used Claude Sonnet 5.5)
 - [`CLAUDE.md`](CLAUDE.md): project instructions for the coding agent
 - [`backend/prompts/system.md`](backend/prompts/system.md): the runtime system prompt (the policy is injected at load)
 - Tool descriptions in [`backend/app/tools.py`](backend/app/tools.py), which are part of the prompt

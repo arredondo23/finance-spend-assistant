@@ -1,4 +1,4 @@
-"""API and evidence tests that run without an LLM (stub provider)."""
+"""API and evidence tests that run without an LLM."""
 
 import pytest
 from fastapi.testclient import TestClient
@@ -8,8 +8,7 @@ from app.main import app
 
 
 @pytest.fixture
-def client(monkeypatch):
-    monkeypatch.setenv("LLM_PROVIDER", "stub")
+def client():
     with TestClient(app) as c:
         yield c
 
@@ -38,21 +37,6 @@ def test_summary(client):
 def test_ask_validation(client):
     assert client.post("/ask", json={"question": ""}).status_code == 422
     assert client.post("/ask", json={}).status_code == 422
-
-
-def test_stub_policy_only(client):
-    body = client.post("/ask", json={"question": "Who is allowed to approve an invoice of EUR 60,000?"}).json()
-    assert "Finance Director" in body["answer"]
-    assert body["route"] == ["policy"] and body["data_evidence"] == []
-    assert body["policy_evidence"][0]["section"] == "3"
-    assert body["llm"].startswith("stub")
-
-
-def test_stub_data_question(client):
-    body = client.post("/ask", json={"question": "Total spend with vendors based in Spain?"}).json()
-    groups = body["data_evidence"][0]["groups"]
-    assert {g["currency"]: g["value"] for g in groups}["EUR"] == 1576971.22
-    assert "data" in body["route"]
 
 
 def test_bad_tool_args_return_error_to_llm():

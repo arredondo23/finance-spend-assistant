@@ -21,7 +21,7 @@ FastAPI backend, React (Vite + TypeScript) frontend, Claude Opus 5.5 on AWS Bedr
 
 ## Setup
 
-Prerequisites: Python 3.12 with [uv](https://docs.astral.sh/uv/), Node 20+, and Bedrock access to Claude (or use the stub, below).
+Prerequisites: Python 3.12 with [uv](https://docs.astral.sh/uv/), Node 20+, and Bedrock access to Claude.
 
 ```bash
 cp .env.example .env          # fill in Bedrock credentials, see comments in the file
@@ -50,8 +50,6 @@ uv run python ../eval/run_eval.py  # 10-question eval against the configured LLM
 ### LLM path
 
 **Claude Opus 5.5 on AWS Bedrock** (`us.anthropic.claude-opus-5-5`), through the Anthropic Python SDK's `AnthropicBedrock` client. `.env.example` documents both auth options: a Bedrock API key (`AWS_BEARER_TOKEN_BEDROCK`), which is what I used through a corporate Bedrock gateway (`ANTHROPIC_BEDROCK_BASE_URL`), or standard AWS credentials via boto3.
-
-No credentials? Set `LLM_PROVIDER=stub`. The stub is a keyword router that calls the same real tools and fills a template. It handles four question shapes, is labelled in the logs, in every response (`"llm": "stub ..."`) and with a red badge in the UI.
 
 ## How it works
 

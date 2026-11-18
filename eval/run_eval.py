@@ -4,7 +4,7 @@ Ground truth is computed here with plain pandas straight from the CSVs, independ
 so a bug in the tools cannot also hide in the expected values.
 
 Run from the repo root:  cd backend && uv run python ../eval/run_eval.py
-Uses whatever LLM_PROVIDER is configured (bedrock by default). Each run makes real LLM calls.
+Each run makes real LLM calls to Bedrock.
 """
 
 import json

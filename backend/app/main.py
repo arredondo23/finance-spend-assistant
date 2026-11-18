@@ -19,8 +19,6 @@ log = logging.getLogger("spend_assistant")
 async def lifespan(app: FastAPI):
     data.invoices()  # load and join the CSVs once at startup
     log.info("LLM path: %s", llm.llm_label())
-    if llm.provider() == "stub":
-        log.warning(llm.STUB_WARNING)
     yield
 
 

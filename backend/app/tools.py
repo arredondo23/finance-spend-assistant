@@ -11,7 +11,7 @@ from .models import InvoiceFilters, VendorStatus
 
 GroupBy = Literal[
     "vendor_name", "vendor_country", "vendor_category", "vendor_status",
-    "cost_center", "approved_by", "description", "month",
+    "cost_center", "approved_by", "description", "month", "currency",
 ]
 
 
@@ -84,8 +84,9 @@ TOOLS: dict[str, Tool] = {
         "Return individual invoice rows matching filters (combined with AND). Use for 'show me / which invoices...' "
         "questions. Each row includes vendor_country, vendor_category and vendor_status joined from the vendor master, "
         "and is_credit_note (amount < 0). Missing PO or approver is null. "
-        "Amount filters are RAW amounts in each invoice's own currency with no FX conversion, so for a threshold like "
-        "'over EUR 50,000' you MUST also set currency=EUR. "
+        "`amount` is in the invoice's own currency; `amount_eur` is the EUR equivalent at the ECB rate `fx_rate` "
+        "published on `fx_rate_date` (null for EUR invoices). min_amount and max_amount filter on amount_eur, so "
+        "EUR policy thresholds apply to every currency without a currency filter. "
         "This tool does not compute totals, counts across groups, or rankings: use `aggregate` for those. "
         "Results are capped by `limit` (max 50); check `total_matched` and `truncated` before claiming a list is complete.",
     ),
@@ -93,10 +94,12 @@ TOOLS: dict[str, Tool] = {
         AggregateArgs,
         aggregate,
         "Compute sum_amount, count or avg_amount over invoices matching filters, optionally grouped. Use for 'how much', "
-        "'how many', 'top N' and 'by month / by vendor' questions. For sum_amount and avg_amount the result is ALWAYS "
-        "split by currency (enforced in code), because there are no FX rates; top_n then ranks within each currency. "
-        "Sums include credit notes (negative amounts); each group reports credit_note_count and invoice_numbers. "
-        "Amount filters are raw amounts in each invoice's own currency.",
+        "'how many', 'top N' and 'by month / by vendor' questions. sum_amount and avg_amount are in EUR, with GBP and "
+        "USD converted at ECB rates, so groups and top_n rankings span all currencies. Add 'currency' to group_by "
+        "only when the user asks for amounts in their original currency; then `value` is in that group's currency, "
+        "`value_eur` is the EUR equivalent, and top_n ranks within each currency. "
+        "Sums include credit notes (negative amounts); each group reports credit_note_count, invoice_numbers, "
+        "converted_invoice_count and prior_rate_invoice_count. Amount filters are in EUR (on amount_eur).",
     ),
     "get_vendors": Tool(
         GetVendorsArgs,

@@ -29,26 +29,37 @@ from fastapi.testclient import TestClient  # noqa: E402
 from app.main import app  # noqa: E402
 
 # ---------- independent ground truth ----------
-inv = pd.read_csv(ROOT / "backend/data/invoices_2025_clean.csv")
+inv = pd.read_csv(ROOT / "backend/data/invoices_2025_clean.csv", parse_dates=["invoice_date"])
 ven = pd.read_csv(ROOT / "backend/data/vendor_master.csv")
 df = inv.merge(ven[["vendor_id", "country", "status"]], on="vendor_id")
+
+# ECB rate on the invoice date, or the last one published before it (weekends, TARGET holidays). EUR is 1.0.
+ecb = pd.read_csv(ROOT / "backend/data/conversion/eurofxref-hist.csv", usecols=["Date", "USD", "GBP"], parse_dates=["Date"])
+ecb = ecb.melt(id_vars="Date", var_name="currency", value_name="rate").dropna().sort_values("Date")
+df = pd.merge_asof(df.sort_values("invoice_date"), ecb, left_on="invoice_date", right_on="Date", by="currency")
+df.loc[df.currency == "EUR", "rate"] = 1.0
+df["amount_eur"] = (df.amount / df.rate).round(2)
 
 
 def money(x: float) -> str:
     return f"{x:.2f}"
 
 
-spain = df[df.country == "Spain"].groupby("currency")["amount"].sum()
-top_by_cur = df.groupby(["currency", "vendor_name"])["amount"].sum().reset_index()
-top1 = {c: g.sort_values("amount", ascending=False).iloc[0] for c, g in top_by_cur.groupby("currency")}
+spain_eur = df[df.country == "Spain"]["amount_eur"].sum()
+top5 = df.groupby("vendor_name")["amount_eur"].sum().sort_values(ascending=False).head(5)
+gbp_total = df[df.currency == "GBP"]["amount"].sum()
 q1_eur = df[(df.currency == "EUR") & (df.invoice_date >= "2025-01-01") & (df.invoice_date <= "2025-03-31")]["amount"].sum()
 
 CASES = [
     {"id": "spain_total", "q": "What is our total spend with vendors based in Spain?",
-     "status": "answered", "numbers": [money(v) for v in spain.values], "needs_data": True},
+     "status": "answered", "numbers": [money(spain_eur)], "sections": ["5.1"], "needs_data": True},
     {"id": "top5_vendors", "q": "What are our top 5 vendors by total spend in 2025?",
-     "status": "answered", "numbers": [money(r.amount) for r in top1.values()],
-     "text": [r.vendor_name for r in top1.values()], "needs_data": True},
+     "status": "answered", "numbers": [money(v) for v in top5.values], "text": list(top5.index), "needs_data": True},
+    {"id": "gbp_original_currency", "q": "How much did we spend in GBP, in the original currency?",
+     "status": "answered", "numbers": [money(gbp_total)], "needs_data": True},
+    {"id": "inactive_over_50k_eur", "q": "Which invoices from inactive vendors are above EUR 50,000 once GBP and USD are converted to EUR?",
+     "status": "answered", "invoices": sorted(df[(df.status == "INACTIVE") & (df.amount_eur > 50000)].invoice_number),
+     "needs_data": True},
     {"id": "approver_60k", "q": "Who is allowed to approve an invoice of EUR 60,000?",
      "status": "answered", "text": ["Finance Director"], "sections": ["3"], "needs_data": False},
     {"id": "inactive_no_approver", "q": "Which invoices from inactive vendors have no approver?",

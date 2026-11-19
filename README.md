@@ -4,7 +4,7 @@ A small web app where a finance analyst asks questions about 2025 vendor invoice
 
 FastAPI backend, React (Vite + TypeScript) frontend, Claude Opus 5.5 on AWS Bedrock.
 
-![The app answering "What are our top 5 vendors by total spend in 2025?": invoice data overview on the left, per-currency top 5 with policy evidence on the right](infographics/ui_top5.png)
+![The app on startup: invoice data overview with the EUR-converted total, the ECB conversion disclaimer and per-currency totals on the left, example questions on the right](infographics/fx_summary.png)
 
 ## Contents
 
@@ -72,7 +72,8 @@ Browser --POST /ask--> FastAPI --> Claude (policy text in system prompt)
 - **Fixed tools, no generated code or SQL.** The model picks a tool and fills in arguments. Pydantic models generate the tool schemas, validate the arguments (validation errors go back to the model so it can fix the call), and define the API contract.
 - **Evidence comes from code, not the model.** The model only returns prose and section IDs. The backend checks each ID against the policy file, drops unknown ones with a warning, and attaches the exact text. Rows and groups come straight from the tool results.
 - **Routing is visible.** `route` in the response is derived from what was actually used (`policy`, `data`, both or neither), and the UI shows it as "Based on: ..." above the evidence.
-- **Currency is never summed.** There are no FX rates, and §5.1 requires the ECB rate on the invoice date. `aggregate` always splits money metrics by currency in code, so "top 5 vendors" returns a top 5 per currency.
+- **Currencies are converted before the app reads them.** §5.1 says non-EUR invoices are converted at the ECB reference rate on the invoice date. `scripts/convert_invoices.py` reads the ECB history file (`data/conversion/eurofxref-hist.csv`) and writes `invoices_2025_clean.converted.csv` with `fx_rate`, `fx_rate_date` and `amount_eur`. The raw CSV is untouched. Totals, rankings and amount filters use `amount_eur`, so "top 5 vendors" is one ranking in EUR. Grouping by `currency` still gives original amounts.
+- **Weekend and holiday rates are an assumption.** ECB publishes nothing on weekends and TARGET holidays, and the policy doesn't say what to do then. Those invoices (16 of 51 GBP/USD) use the last rate published before the invoice date. The UI shows this as a disclaimer in the summary panel and flags the affected rows.
 - **Failure handling.** Iteration cap (6 model round trips), 90 s timeout, refusal and truncation checks. All return `{error, message}` with HTTP 502/504, and the UI shows an error with Retry. Bad tool arguments are retried by the model. Declines (`status: "declined"`) are a normal answer, not an error.
 
 ### `POST /ask` response
@@ -84,7 +85,7 @@ Browser --POST /ask--> FastAPI --> Claude (policy text in system prompt)
   "route": ["policy", "data"],
   "policy_evidence": [{"section": "4.1", "text": "exact text from procurement_policy.md"}],
   "data_evidence": [{"tool": "query_invoices", "args": {}, "total_matched": 4, "truncated": false, "rows": [], "groups": null}],
-  "warnings": ["Amounts are reported per currency..."],
+  "warnings": ["3 GBP/USD invoice(s) converted to EUR at the ECB reference rate on the invoice date (§5.1)."],
   "llm": "bedrock:us.anthropic.claude-opus-5-5"
 }
 ```
@@ -97,7 +98,7 @@ A simple prototype. Nothing fancy, but it works.
 
 I spent most of the time thinking about the right architecture. Determinism is very important here, so the LLM has a narrow job: it translates the user's question into a call to one of three fixed tools (`query_invoices`, `aggregate`, `get_vendors`) and fills in the right parameters. It decides which tool to call and with what, but it can't create functions, code or SQL on the fly. If it could, the same question asked several times could end up with different answers. I didn't want that behaviour.
 
-I left out auth, Docker, deployment, chat history, streaming responses, visual polish and FX conversion. Most of the questions in the assignment can be answered without them.
+I left out auth, Docker, deployment, chat history, streaming responses and visual polish. Most of the questions in the assignment can be answered without them.
 
 ### How I'd evaluate it
 
@@ -118,7 +119,7 @@ Probably no pandas for the data, SQL queries instead. The tools stay fixed; they
 
 Planning took about 40 minutes across two sessions (timestamps in `ai_harness/planning_conversation.md`). The build session, from scaffold to eval, README and repo setup, took about 45 minutes ([`ai_harness/build_session.md`](ai_harness/build_session.md)). Planning ran on Claude Sonnet 5.5 and the build on Claude Opus 5.5.
 
-Next steps, in order: number and ID verification against tool results on every answer; a dated FX table so currencies can be combined with a visible label; a tighter citation rule in the prompt to cut over-citing; persisting the audit record per request; streaming.
+Next steps, in order: number and ID verification against tool results on every answer; a tighter citation rule in the prompt to cut over-citing; persisting the audit record per request; streaming.
 
 ## AI harness
 

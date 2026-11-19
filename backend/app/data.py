@@ -12,15 +12,25 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 INVOICE_COLUMNS = [
     "invoice_number", "invoice_date", "vendor_id", "vendor_name", "vendor_country",
     "vendor_category", "vendor_status", "description", "amount", "currency",
+    "fx_rate", "fx_rate_date", "amount_eur",
     "cost_center", "po_number", "approved_by", "is_credit_note",
 ]
+
+FX_NOTE = (
+    "GBP and USD amounts are converted to EUR at the ECB reference rate on the invoice date (policy §5.1). "
+    "ECB publishes no rate on weekends and TARGET holidays, so invoices dated on those days use the last rate "
+    "published before the invoice date (shown as fx_rate_date)."
+)
 
 
 @lru_cache
 def invoices() -> pd.DataFrame:
-    inv = pd.read_csv(DATA_DIR / "invoices_2025_clean.csv", dtype=str)
-    inv["amount"] = inv["amount"].astype(float)
+    # Built by scripts/convert_invoices.py: the raw invoices plus fx_rate, fx_rate_date and amount_eur.
+    inv = pd.read_csv(DATA_DIR / "conversion" / "invoices_2025_clean.converted.csv", dtype=str)
+    for col in ("amount", "fx_rate", "amount_eur"):
+        inv[col] = inv[col].astype(float)
     inv["invoice_date"] = pd.to_datetime(inv["invoice_date"]).dt.date
+    inv["fx_rate_date"] = pd.to_datetime(inv["fx_rate_date"]).dt.date
     vendors_df = vendors().rename(
         columns={"country": "vendor_country", "category": "vendor_category", "status": "vendor_status"}
     )
@@ -73,9 +83,9 @@ def filter_invoices(f: InvoiceFilters) -> pd.DataFrame:
     if f.description_contains:
         mask &= _icontains(df["description"], f.description_contains)
     if f.min_amount is not None:
-        mask &= df["amount"] >= f.min_amount
+        mask &= df["amount_eur"] >= f.min_amount
     if f.max_amount is not None:
-        mask &= df["amount"] <= f.max_amount
+        mask &= df["amount_eur"] <= f.max_amount
     if f.has_po is not None:
         mask &= df["po_number"].notna() == f.has_po
     if f.has_approver is not None:
@@ -96,7 +106,7 @@ def to_records(df: pd.DataFrame, columns: list[str] = INVOICE_COLUMNS) -> list[d
             elif hasattr(v, "isoformat"):
                 row[k] = v.isoformat()
             elif isinstance(v, float):
-                row[k] = round(v, 2)
+                row[k] = round(v, 6 if k == "fx_rate" else 2)
             elif hasattr(v, "item"):  # numpy scalar
                 row[k] = v.item()
             else:
@@ -108,11 +118,13 @@ def to_records(df: pd.DataFrame, columns: list[str] = INVOICE_COLUMNS) -> list[d
 def aggregate(
     df: pd.DataFrame, metric: str, group_by: list[str], top_n: int | None, sort_desc: bool
 ) -> list[dict]:
-    """Group and aggregate. Currency is always a grouping key for money metrics, so currencies are never summed together."""
+    """Group and aggregate. Money metrics use amount_eur (converted at ECB rates) unless currency is a group key,
+    in which case each group reports the original amount in its own currency plus the EUR equivalent."""
     if df.empty:
         return []
     money = metric in ("sum_amount", "avg_amount")
-    keys = list(dict.fromkeys(group_by + (["currency"] if money else [])))
+    by_currency = "currency" in group_by
+    keys = list(dict.fromkeys(group_by))
     grouped = df.groupby(keys, dropna=False, sort=False) if keys else [((), df)]
 
     groups = []
@@ -120,16 +132,25 @@ def aggregate(
         if not isinstance(key_vals, tuple):
             key_vals = (key_vals,)
         key_map = {k: (None if pd.isna(v) else v) for k, v in zip(keys, key_vals)}
-        currency = key_map.pop("currency", None) if money else None
-        value = {"sum_amount": g["amount"].sum(), "avg_amount": g["amount"].mean(), "count": len(g)}[metric]
-        groups.append({
+        currency = None
+        if money:
+            currency = key_map.pop("currency") if by_currency else "EUR"
+        amount_col = "amount" if by_currency else "amount_eur"
+        agg = "sum" if metric == "sum_amount" else "mean"
+        value = getattr(g[amount_col], agg)() if money else len(g)
+        group = {
             "keys": key_map,
             "currency": currency,
             "value": round(float(value), 2) if money else int(value),
             "invoice_count": int(len(g)),
             "credit_note_count": int(g["is_credit_note"].sum()),
             "invoice_numbers": sorted(g["invoice_number"].tolist()),
-        })
+        }
+        if money:
+            group["value_eur"] = round(float(getattr(g["amount_eur"], agg)()), 2)
+            group["converted_invoice_count"] = int((g["currency"] != "EUR").sum())
+            group["prior_rate_invoice_count"] = _prior_rate_count(g)
+        groups.append(group)
 
     groups.sort(key=lambda r: r["value"], reverse=sort_desc)
     if top_n is not None:
@@ -148,18 +169,26 @@ def aggregate(
     return groups
 
 
+def _prior_rate_count(df: pd.DataFrame) -> int:
+    """Invoices dated on a day without an ECB rate, converted at the last rate published before the invoice date."""
+    return int((df["fx_rate_date"].notna() & (df["fx_rate_date"] != df["invoice_date"])).sum())
+
+
 def get_summary() -> dict:
     df = invoices()
     all_rows = InvoiceFilters()
-    by_currency = aggregate(df, "sum_amount", [], None, True)
+    total = aggregate(df, "sum_amount", [], None, True)[0]
+    by_currency = aggregate(df, "sum_amount", ["currency"], None, True)
     by_status = aggregate(df, "sum_amount", ["vendor_status"], None, True)
     return {
         "invoice_count": len(df),
         "vendor_count": int(df["vendor_id"].nunique()),
         "date_from": df["invoice_date"].min(),
         "date_to": df["invoice_date"].max(),
+        "total_spend_eur": total["value"],
         "spend_by_currency": [
-            {"currency": g["currency"], "total": g["value"], "count": g["invoice_count"]} for g in by_currency
+            {"currency": g["currency"], "total": g["value"], "total_eur": g["value_eur"], "count": g["invoice_count"]}
+            for g in by_currency
         ],
         "spend_by_vendor_status": [
             {"status": g["keys"]["vendor_status"], "currency": g["currency"], "total": g["value"],
@@ -172,6 +201,10 @@ def get_summary() -> dict:
             "non_active_vendor": int((df["vendor_status"] != "ACTIVE").sum()),
             "credit_notes": int(df["is_credit_note"].sum()),
         },
-        "note": "Totals are per currency. No FX rates are provided, so currencies are never added together. "
-                "Totals include credit notes (negative amounts).",
+        "fx": {
+            "converted_invoice_count": total["converted_invoice_count"],
+            "prior_rate_invoice_count": total["prior_rate_invoice_count"],
+            "note": FX_NOTE,
+        },
+        "note": "Totals include credit notes (negative amounts). Spend by vendor status is in EUR after conversion.",
     }

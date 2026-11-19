@@ -7,9 +7,11 @@ export interface Summary {
   vendor_count: number
   date_from: string
   date_to: string
-  spend_by_currency: { currency: string; total: number; count: number }[]
+  total_spend_eur: number
+  spend_by_currency: { currency: string; total: number; total_eur: number; count: number }[]
   spend_by_vendor_status: { status: string; currency: string; total: number; count: number }[]
   compliance_flags: { missing_po: number; missing_approver: number; non_active_vendor: number; credit_notes: number }
+  fx: { converted_invoice_count: number; prior_rate_invoice_count: number; note: string }
   note: string
 }
 
@@ -19,6 +21,9 @@ export interface Group {
   keys: Record<string, string | null>
   currency: string | null
   value: number
+  value_eur?: number
+  converted_invoice_count?: number
+  prior_rate_invoice_count?: number
   invoice_count: number
   credit_note_count: number
   invoice_numbers: string[]

@@ -20,6 +20,8 @@ th { background: #fafafa; }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
 tr.flag td { background: #fff6e5; }
 tr.credit td { background: #eef5ff; }
+.disclaimer { background: #fff6e5; border-left: 3px solid #e0a030; padding: 6px 10px; margin: 8px 0; font-size: 12px; }
+td.prior-rate { background: #fff6e5; }
 .missing { color: #a00; }
 .flags { padding-left: 18px; margin: 0; }
 .scroll { overflow-x: auto; }

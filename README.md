@@ -119,6 +119,8 @@ Probably no pandas for the data, SQL queries instead. The tools stay fixed; they
 
 Planning took about 40 minutes across two sessions (timestamps in `ai_harness/planning_conversation.md`). The build session, from scaffold to eval, README and repo setup, took about 45 minutes ([`ai_harness/build_session.md`](ai_harness/build_session.md)). Planning ran on Claude Sonnet 5.5 and the build on Claude Opus 5.5.
 
+After the first release, polishing took about 30 minutes ([`ai_harness/polishing_initial_version.md`](ai_harness/polishing_initial_version.md)) and the ECB FX conversion feature another 30 minutes ([`ai_harness/fx_conversion_feature.md`](ai_harness/fx_conversion_feature.md)), both on Claude Opus 5.5.
+
 Next steps, in order: number and ID verification against tool results on every answer; a tighter citation rule in the prompt to cut over-citing; persisting the audit record per request; streaming.
 
 ## AI harness
@@ -128,6 +130,8 @@ I built this with Claude Code. Everything the brief asks for is in the repo:
 - [`ai_harness/planning_conversation.md`](ai_harness/planning_conversation.md): the planning conversation, where the design decisions were made
 - [`ai_harness/implementation_plan.md`](ai_harness/implementation_plan.md): the handoff plan the build followed
 - [`ai_harness/build_session.md`](ai_harness/build_session.md): the build session log (Claude Opus 5.5; planning used Claude Sonnet 5.5)
+- [`ai_harness/polishing_initial_version.md`](ai_harness/polishing_initial_version.md): the polishing session after v0.1.0 (Claude Opus 5.5)
+- [`ai_harness/fx_conversion_feature.md`](ai_harness/fx_conversion_feature.md): the session that added ECB FX conversion (Claude Opus 5.5)
 - [`CLAUDE.md`](CLAUDE.md): project instructions for the coding agent
 - [`backend/prompts/system.md`](backend/prompts/system.md): the runtime system prompt (the policy is injected at load)
 - Tool descriptions in [`backend/app/tools.py`](backend/app/tools.py), which are part of the prompt

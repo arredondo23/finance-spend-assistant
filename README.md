@@ -2,7 +2,7 @@
 
 A small web app where a finance analyst asks questions about 2025 vendor invoices and the procurement policy (FIN-POL-014), and every answer shows what it is based on: the exact policy text, the invoice rows, and the query that produced them.
 
-FastAPI backend, React (Vite + TypeScript) frontend, Claude Opus 5.5 on AWS Bedrock.
+FastAPI backend, React (Vite + TypeScript) frontend, Claude Sonnet 5.5 on AWS Bedrock.
 
 ![The app on startup: invoice data overview with the EUR-converted total, the ECB conversion disclaimer and per-currency totals on the left, example questions on the right](infographics/fx_summary.png)
 
@@ -49,7 +49,7 @@ uv run pytest ../eval -v  # 10-question eval, one test per question (makes real 
 
 ### LLM path
 
-**Claude Opus 5.5 on AWS Bedrock** (`us.anthropic.claude-opus-5-5`), through the Anthropic Python SDK's `AnthropicBedrock` client. `.env.example` documents both auth options: a Bedrock API key (`AWS_BEARER_TOKEN_BEDROCK`), which is what I used through a corporate Bedrock gateway (`ANTHROPIC_BEDROCK_BASE_URL`), or standard AWS credentials via boto3.
+**Claude Sonnet 5.5 on AWS Bedrock** (`us.anthropic.claude-sonnet-5-5`), through the Anthropic Python SDK's `AnthropicBedrock` client. `.env.example` documents both auth options: a Bedrock API key (`AWS_BEARER_TOKEN_BEDROCK`), which is what I used through a corporate Bedrock gateway (`ANTHROPIC_BEDROCK_BASE_URL`), or standard AWS credentials via boto3.
 
 ## How it works
 
@@ -86,7 +86,7 @@ Browser --POST /ask--> FastAPI --> Claude (policy text in system prompt)
   "policy_evidence": [{"section": "4.1", "text": "exact text from procurement_policy.md"}],
   "data_evidence": [{"tool": "query_invoices", "args": {}, "total_matched": 4, "truncated": false, "rows": [], "groups": null}],
   "warnings": ["3 GBP/USD invoice(s) converted to EUR at the ECB reference rate on the invoice date (§5.1)."],
-  "llm": "bedrock:us.anthropic.claude-opus-5-5"
+  "llm": "bedrock:us.anthropic.claude-sonnet-5-5"
 }
 ```
 
@@ -116,6 +116,8 @@ Probably no pandas for the data, SQL queries instead. The tools stay fixed; they
 - **Audit trail (§8.2).** Persist every question, user, model ID, prompt version, tool call with arguments, returned invoice IDs and the final answer. Today this only lives in the logs. The evidence is already structured, so it's one write per request.
 
 ## Time taken and next steps
+
+Before any AI session, I spent about 30 minutes looking at the raw data and reading the procurement policy myself, so I understood what I was dealing with.
 
 Planning took about 40 minutes across two sessions (timestamps in `ai_harness/planning_conversation.md`). The build session, from scaffold to eval, README and repo setup, took about 45 minutes ([`ai_harness/build_session.md`](ai_harness/build_session.md)). Planning ran on Claude Sonnet 5.5 and the build on Claude Opus 5.5.
 

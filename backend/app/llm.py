@@ -36,7 +36,7 @@ class FinalAnswer(BaseModel):
 
 
 def model_id() -> str:
-    return os.environ.get("BEDROCK_MODEL_ID", "us.anthropic.claude-opus-5-5")
+    return os.environ.get("BEDROCK_MODEL_ID", "us.anthropic.claude-sonnet-5-5")
 
 
 def llm_label() -> str:
@@ -106,7 +106,7 @@ def _ask_bedrock(question: str) -> AskResponse:
 
     for _ in range(max_iterations):
         try:
-            # No temperature: Claude Opus 5.5 rejects sampling parameters. Determinism comes from fixed tools and the output schema.
+            # No temperature: Claude Sonnet 5.5 rejects sampling parameters. Determinism comes from fixed tools and the output schema.
             resp = client.messages.create(
                 model=model_id(),
                 max_tokens=16000,

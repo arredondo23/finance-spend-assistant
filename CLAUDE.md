@@ -28,7 +28,7 @@ Take-home prototype: finance spend assistant. FastAPI backend (`backend/`), Reac
 
 ## LLM
 
-Claude on AWS Bedrock via `anthropic.AnthropicBedrock`. Config in `.env` (see `.env.example`). Claude Opus 5.5 rejects `temperature` and forced `tool_choice`; use `output_config.effort` and the JSON output schema instead.
+Claude on AWS Bedrock via `anthropic.AnthropicBedrock`. Config in `.env` (see `.env.example`). Claude Sonnet 5.5 rejects `temperature` and forced `tool_choice`; use `output_config.effort` and the JSON output schema instead.
 
 ## Scope
 

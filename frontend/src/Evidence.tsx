@@ -2,8 +2,10 @@ import { type AskResponse, type DataEvidence, type Group, type Row, fmtMoney } f
 
 const ROW_COLUMNS = [
   'invoice_number', 'invoice_date', 'vendor_name', 'vendor_status', 'vendor_country',
-  'amount', 'currency', 'po_number', 'approved_by', 'description',
+  'amount', 'currency', 'amount_eur', 'fx_rate', 'fx_rate_date', 'po_number', 'approved_by', 'description',
 ]
+const NUM_COLUMNS = ['amount', 'amount_eur', 'fx_rate']
+const MONEY_COLUMNS = ['amount', 'amount_eur']
 const VENDOR_COLUMNS = ['vendor_id', 'vendor_name', 'country', 'category', 'status']
 
 function routeLabel(route: AskResponse['route']) {
@@ -81,6 +83,8 @@ function GroupTable({ groups }: { groups: Group[] }) {
             {keyCols.map((k) => <th key={k}>{k}</th>)}
             {isMoney && <th>Currency</th>}
             <th className="num">Value</th>
+            {isMoney && <th className="num">EUR equivalent</th>}
+            {isMoney && <th className="num">Converted</th>}
             <th className="num">Invoices</th>
             <th className="num">Credit notes</th>
             <th>Invoice numbers (lineage)</th>
@@ -92,6 +96,12 @@ function GroupTable({ groups }: { groups: Group[] }) {
               {keyCols.map((k) => <td key={k}>{g.keys[k] ?? <em>none</em>}</td>)}
               {isMoney && <td>{g.currency}</td>}
               <td className="num">{isMoney ? fmtMoney(g.value) : g.value}</td>
+              {isMoney && <td className="num">{fmtMoney(g.value_eur ?? g.value)}</td>}
+              {isMoney && (
+                <td className="num" title="Invoices converted from GBP/USD; in brackets, those using the last ECB rate before the invoice date">
+                  {g.converted_invoice_count ?? 0}{g.prior_rate_invoice_count ? ` (${g.prior_rate_invoice_count} prior-day rate)` : ''}
+                </td>
+              )}
               <td className="num">{g.invoice_count}</td>
               <td className="num">{g.credit_note_count}</td>
               <td>
@@ -108,20 +118,34 @@ function GroupTable({ groups }: { groups: Group[] }) {
   )
 }
 
+function Cell({ row, c }: { row: Row; c: string }) {
+  const v = row[c]
+  if (c === 'fx_rate_date') {
+    if (v === null) return <td className="muted">n/a</td>
+    const prior = v !== row.invoice_date
+    return (
+      <td className={prior ? 'prior-rate' : ''} title={prior ? 'No ECB rate on the invoice date; last published rate used' : undefined}>
+        {String(v)}{prior && ' *'}
+      </td>
+    )
+  }
+  if (v === null) return <td><em className="missing">missing</em></td>
+  return (
+    <td className={NUM_COLUMNS.includes(c) ? 'num' : ''}>
+      {MONEY_COLUMNS.includes(c) ? fmtMoney(v as number) : String(v)}
+    </td>
+  )
+}
+
 function RowTable({ rows, columns }: { rows: Row[]; columns: string[] }) {
   return (
     <div className="scroll">
       <table>
-        <thead><tr>{columns.map((c) => <th key={c} className={c === 'amount' ? 'num' : ''}>{c}</th>)}</tr></thead>
+        <thead><tr>{columns.map((c) => <th key={c} className={NUM_COLUMNS.includes(c) ? 'num' : ''}>{c}</th>)}</tr></thead>
         <tbody>
           {rows.map((row, i) => (
             <tr key={i} className={row.is_credit_note ? 'credit' : ''}>
-              {columns.map((c) => (
-                <td key={c} className={c === 'amount' ? 'num' : ''}>
-                  {row[c] === null ? <em className="missing">missing</em>
-                    : c === 'amount' ? fmtMoney(row[c] as number) : String(row[c])}
-                </td>
-              ))}
+              {columns.map((c) => <Cell key={c} row={row} c={c} />)}
             </tr>
           ))}
         </tbody>

@@ -23,10 +23,10 @@ class InvoiceFilters(BaseModel):
     cost_center: str | None = Field(None, description="Exact cost center, e.g. CC-IT-550")
     description_contains: str | None = Field(None, description="Case-insensitive substring of the invoice description")
     min_amount: float | None = Field(
-        None, description="Inclusive lower bound on the raw amount in the invoice's own currency (no FX conversion)"
+        None, description="Inclusive lower bound in EUR, on amount_eur (GBP and USD converted at the ECB rate)"
     )
     max_amount: float | None = Field(
-        None, description="Inclusive upper bound on the raw amount in the invoice's own currency (no FX conversion)"
+        None, description="Inclusive upper bound in EUR, on amount_eur (GBP and USD converted at the ECB rate)"
     )
     has_po: bool | None = Field(None, description="true = has a PO number, false = PO number missing")
     has_approver: bool | None = Field(None, description="true = has an approver, false = approver missing")
@@ -74,7 +74,8 @@ class ErrorResponse(BaseModel):
 
 class CurrencyTotal(BaseModel):
     currency: str
-    total: float
+    total: float = Field(..., description="Original amount in this currency")
+    total_eur: float
     count: int
 
 
@@ -92,12 +93,20 @@ class ComplianceFlags(BaseModel):
     credit_notes: int
 
 
+class FxInfo(BaseModel):
+    converted_invoice_count: int
+    prior_rate_invoice_count: int = Field(..., description="Invoices dated on a day without an ECB rate")
+    note: str
+
+
 class SummaryResponse(BaseModel):
     invoice_count: int
     vendor_count: int
     date_from: date
     date_to: date
+    total_spend_eur: float
     spend_by_currency: list[CurrencyTotal]
     spend_by_vendor_status: list[StatusCurrencyTotal]
     compliance_flags: ComplianceFlags
+    fx: FxInfo
     note: str

@@ -60,15 +60,28 @@ class EvidenceCollector:
                 self.warnings.append(f"query_invoices returned {result['returned']} of {result['total_matched']} matching invoices.")
             if any(r["is_credit_note"] for r in result["rows"]):
                 self.warnings.append("Some returned invoices are credit notes (negative amounts, policy §6.1).")
+            self._fx_warnings(
+                sum(r["currency"] != "EUR" for r in result["rows"]),
+                sum(r["fx_rate_date"] is not None and r["fx_rate_date"] != r["invoice_date"] for r in result["rows"]),
+            )
         elif tool == "aggregate":
             item = DataEvidence(tool=tool, args=args, total_matched=result["total_invoices_matched"],
                                 truncated=False, groups=result["groups"])
-            currencies = {g["currency"] for g in result["groups"] if g["currency"]}
-            if len(currencies) > 1:
-                self.warnings.append("Amounts are reported per currency. No FX rates are available, so currencies are not added together.")
+            groups = [g for g in result["groups"] if g["currency"]]
+            if any(g["currency"] != "EUR" for g in groups):
+                self.warnings.append("Amounts are shown in their original currencies, grouped by currency.")
+            self._fx_warnings(sum(g["converted_invoice_count"] for g in groups),
+                              sum(g["prior_rate_invoice_count"] for g in groups))
             if credit := sum(g["credit_note_count"] for g in result["groups"]):
                 self.warnings.append(f"Totals include {credit} credit note(s) (negative amounts).")
         else:
             item = DataEvidence(tool=tool, args=args, total_matched=result["count"], truncated=False,
                                 rows=result["vendors"])
         self.items.append(item)
+
+    def _fx_warnings(self, converted: int, prior_rate: int) -> None:
+        if converted:
+            self.warnings.append(f"{converted} GBP/USD invoice(s) converted to EUR at the ECB reference rate on the invoice date (§5.1).")
+        if prior_rate:
+            self.warnings.append(f"{prior_rate} of them are dated on a weekend or TARGET holiday with no ECB rate; "
+                                 "they use the last rate published before the invoice date (see fx_rate_date).")

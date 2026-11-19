@@ -41,18 +41,25 @@ function SummaryBody({ s }: { s: Summary }) {
       <p>
         <strong>{s.invoice_count}</strong> invoices from <strong>{s.vendor_count}</strong> vendors, {s.date_from} to {s.date_to}.
       </p>
+      <p>
+        Total spend: <strong>EUR {fmtMoney(s.total_spend_eur)}</strong> (converted)
+      </p>
+      <FxDisclaimer fx={s.fx} />
 
       <h3>Spend by currency</h3>
       <table>
-        <thead><tr><th>Currency</th><th className="num">Total</th><th className="num">Invoices</th></tr></thead>
+        <thead><tr><th>Currency</th><th className="num">Original total</th><th className="num">EUR equivalent</th><th className="num">Invoices</th></tr></thead>
         <tbody>
           {s.spend_by_currency.map((c) => (
-            <tr key={c.currency}><td>{c.currency}</td><td className="num">{fmtMoney(c.total)}</td><td className="num">{c.count}</td></tr>
+            <tr key={c.currency}>
+              <td>{c.currency}</td><td className="num">{fmtMoney(c.total)}</td>
+              <td className="num">{fmtMoney(c.total_eur)}</td><td className="num">{c.count}</td>
+            </tr>
           ))}
         </tbody>
       </table>
 
-      <h3>Spend by vendor status</h3>
+      <h3>Spend by vendor status (EUR, converted)</h3>
       <table>
         <thead><tr><th>Status</th><th>Currency</th><th className="num">Total</th><th className="num">Invoices</th></tr></thead>
         <tbody>
@@ -73,5 +80,14 @@ function SummaryBody({ s }: { s: Summary }) {
       </ul>
       <p className="muted small">{s.note}</p>
     </>
+  )
+}
+
+function FxDisclaimer({ fx }: { fx: Summary['fx'] }) {
+  return (
+    <div className="disclaimer">
+      <strong>Currency conversion.</strong> {fx.note} {fx.converted_invoice_count} invoices are converted;{' '}
+      {fx.prior_rate_invoice_count} of them are dated on a day without an ECB rate.
+    </div>
   )
 }

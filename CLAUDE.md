@@ -11,6 +11,7 @@ Take-home prototype: finance spend assistant. FastAPI backend (`backend/`), Reac
 - Backend: `cd backend && uv run uvicorn app.main:app --port 8000`
 - Frontend: `cd frontend && npm run dev`
 - Tests (no LLM): `cd backend && uv run pytest`
+- Rebuild the converted invoices after changing the raw CSV or the ECB file: `cd backend && uv run python scripts/convert_invoices.py`
 - Eval (real LLM calls, costs money): `cd backend && uv run pytest ../eval -v`
 - Check ports first (`lsof -i:8000`, `lsof -i:5173`); use 8000 to 8099 and 5173 to 5179.
 
@@ -18,7 +19,8 @@ Take-home prototype: finance spend assistant. FastAPI backend (`backend/`), Reac
 
 - Exactly two HTTP endpoints: `GET /summary`, `POST /ask`.
 - The LLM never writes code or SQL. It calls the fixed tools in `backend/app/tools.py`.
-- Never sum or convert across currencies. Currency grouping is enforced in `data.aggregate`, not in the prompt.
+- Money metrics and amount filters use `amount_eur` from `backend/data/conversion/invoices_2025_clean.converted.csv`, built by `backend/scripts/convert_invoices.py` from the ECB reference rates (§5.1). Never sum original `amount` across currencies; `data.aggregate` only uses it when `currency` is a group key. The LLM never converts amounts itself.
+- ECB has no rate on weekends and TARGET holidays: those invoices use the last rate published before the invoice date, recorded in `fx_rate_date`. Keep this visible in the UI disclaimer and the evidence warnings.
 - Evidence (policy text, rows, groups) is built by code from source files and tool results, never copied from LLM output.
 - `/summary` and the tools share `backend/app/data.py`, so their numbers cannot disagree.
 - Never describe an invoice as "paid"; there is no payment column. Segregation of duties (§7) cannot be checked; there is no requester column.

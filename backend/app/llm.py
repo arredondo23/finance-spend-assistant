@@ -124,6 +124,13 @@ def _ask_bedrock(question: str) -> AskResponse:
             raise LLMError("llm_unreachable", f"Could not reach the language model: {e}", 502) from e
         except anthropic.APIStatusError as e:
             raise LLMError("llm_error", f"Language model returned HTTP {e.status_code}.", 502) from e
+        except RuntimeError as e:
+            # Raised by the Bedrock client before sending when it finds no bearer token and no AWS credentials.
+            raise LLMError(
+                "llm_auth",
+                "No Bedrock credentials found. Set AWS_BEARER_TOKEN_BEDROCK or AWS credentials (see .env.example).",
+                502,
+            ) from e
 
         if resp.stop_reason == "tool_use":
             messages.append({"role": "assistant", "content": resp.content})

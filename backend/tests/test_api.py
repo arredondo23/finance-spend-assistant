@@ -46,3 +46,13 @@ def test_bad_tool_args_return_error_to_llm():
     collector = EvidenceCollector()
     content, is_error = _run_tool("query_invoices", {"filters": {"vendor_status": "inactive"}}, collector)
     assert is_error and "vendor_status" in content and collector.items == []
+
+
+def test_missing_credentials_return_clean_error(client, monkeypatch):
+    for var in ("AWS_BEARER_TOKEN_BEDROCK", "AWS_PROFILE", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("AWS_SHARED_CREDENTIALS_FILE", "/nonexistent")
+    monkeypatch.setenv("AWS_CONFIG_FILE", "/nonexistent")
+    r = client.post("/ask", json={"question": "How many invoices are there?"})
+    assert r.status_code == 502
+    assert r.json()["error"] == "llm_auth"

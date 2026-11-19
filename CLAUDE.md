@@ -11,7 +11,7 @@ Take-home prototype: finance spend assistant. FastAPI backend (`backend/`), Reac
 - Backend: `cd backend && uv run uvicorn app.main:app --port 8000`
 - Frontend: `cd frontend && npm run dev`
 - Tests (no LLM): `cd backend && uv run pytest`
-- Eval (real LLM calls, costs money): `cd backend && uv run python ../eval/run_eval.py`
+- Eval (real LLM calls, costs money): `cd backend && uv run pytest ../eval -v`
 - Check ports first (`lsof -i:8000`, `lsof -i:5173`); use 8000 to 8099 and 5173 to 5179.
 
 ## Invariants (do not break)
@@ -26,7 +26,7 @@ Take-home prototype: finance spend assistant. FastAPI backend (`backend/`), Reac
 
 ## LLM
 
-Claude on AWS Bedrock via `anthropic.AnthropicBedrock`. Config in `.env` (see `.env.example`). Claude Opus 5.5 rejects `temperature` and forced `tool_choice`; use `output_config.effort` and the JSON output schema instead. `LLM_PROVIDER=stub` runs without an LLM.
+Claude on AWS Bedrock via `anthropic.AnthropicBedrock`. Config in `.env` (see `.env.example`). Claude Opus 5.5 rejects `temperature` and forced `tool_choice`; use `output_config.effort` and the JSON output schema instead.
 
 ## Scope
 

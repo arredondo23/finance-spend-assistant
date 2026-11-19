@@ -61,7 +61,7 @@ class AskResponse(BaseModel):
     policy_evidence: list[PolicyEvidence]
     data_evidence: list[DataEvidence]
     warnings: list[str]
-    llm: str = Field(..., description="Which LLM path produced the answer, e.g. bedrock:<model> or stub")
+    llm: str = Field(..., description="Which LLM path produced the answer, e.g. bedrock:<model>")
 
 
 class ErrorResponse(BaseModel):

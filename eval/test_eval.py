@@ -1,10 +1,10 @@
-"""Small eval set for POST /ask.
+"""Small eval set for POST /ask, one pytest per case.
 
 Ground truth is computed here with plain pandas straight from the CSVs, independently of the app's tools,
 so a bug in the tools cannot also hide in the expected values.
 
-Run from the repo root:  cd backend && uv run python ../eval/run_eval.py
-Uses whatever LLM_PROVIDER is configured (bedrock by default). Each run makes real LLM calls.
+Run:  cd backend && uv run pytest ../eval -v
+Each run makes real LLM calls to Bedrock. Full responses are written to eval/last_run.json.
 """
 
 import json
@@ -14,6 +14,7 @@ import time
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "backend"))
@@ -108,23 +109,25 @@ def score(case: dict, status_code: int, body: dict) -> list[str]:
     return fails
 
 
-def main() -> None:
-    results = []
-    with TestClient(app) as client:
-        for case in CASES:
-            t = time.time()
-            r = client.post("/ask", json={"question": case["q"]})
-            fails = score(case, r.status_code, r.json())
-            results.append({"id": case["id"], "question": case["q"], "pass": not fails, "fails": fails,
-                            "seconds": round(time.time() - t, 1), "response": r.json()})
-            print(f"{'PASS' if not fails else 'FAIL'}  {case['id']:<24} {results[-1]['seconds']:>5}s  {'; '.join(fails)}")
+@pytest.fixture(scope="module")
+def client():
+    with TestClient(app) as c:
+        yield c
 
-    passed = sum(r["pass"] for r in results)
-    print(f"\n{passed}/{len(results)} passed")
+
+@pytest.fixture(scope="module")
+def results():
+    collected = []
+    yield collected
     out = Path(__file__).resolve().parent / "last_run.json"
-    out.write_text(json.dumps(results, indent=2))
-    print(f"Full responses written to {out.relative_to(ROOT)}")
+    out.write_text(json.dumps(collected, indent=2))
 
 
-if __name__ == "__main__":
-    main()
+@pytest.mark.parametrize("case", CASES, ids=[c["id"] for c in CASES])
+def test_eval_case(case, client, results):
+    t = time.time()
+    r = client.post("/ask", json={"question": case["q"]})
+    fails = score(case, r.status_code, r.json())
+    results.append({"id": case["id"], "question": case["q"], "pass": not fails, "fails": fails,
+                    "seconds": round(time.time() - t, 1), "response": r.json()})
+    assert not fails, "; ".join(fails)

@@ -1,9 +1,8 @@
-"""Tool-use loop against Claude on AWS Bedrock, plus a labelled stub that runs without any LLM."""
+"""Tool-use loop against Claude on AWS Bedrock."""
 
 import json
 import logging
 import os
-import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
@@ -36,16 +35,12 @@ class FinalAnswer(BaseModel):
     policy_sections: list[str]
 
 
-def provider() -> str:
-    return os.environ.get("LLM_PROVIDER", "bedrock").strip().lower()
-
-
 def model_id() -> str:
     return os.environ.get("BEDROCK_MODEL_ID", "us.anthropic.claude-opus-5-5")
 
 
 def llm_label() -> str:
-    return "stub (no LLM: keyword router)" if provider() == "stub" else f"bedrock:{model_id()}"
+    return f"bedrock:{model_id()}"
 
 
 @lru_cache
@@ -82,7 +77,7 @@ def _run_tool(name: str, raw_args: dict, collector: EvidenceCollector) -> tuple[
     return json.dumps(result, default=str), False
 
 
-def _build_response(final: FinalAnswer, collector: EvidenceCollector, extra_warnings: list[str] = ()) -> AskResponse:
+def _build_response(final: FinalAnswer, collector: EvidenceCollector) -> AskResponse:
     policy_evidence, citation_warnings = check_citations(final.policy_sections)
     route = (["policy"] if policy_evidence else []) + (["data"] if collector.items else [])
     return AskResponse(
@@ -91,7 +86,7 @@ def _build_response(final: FinalAnswer, collector: EvidenceCollector, extra_warn
         route=route,
         policy_evidence=policy_evidence,
         data_evidence=collector.items,
-        warnings=list(extra_warnings) + list(dict.fromkeys(collector.warnings)) + citation_warnings,
+        warnings=list(dict.fromkeys(collector.warnings)) + citation_warnings,
         llm=llm_label(),
     )
 
@@ -100,8 +95,6 @@ def ask(question: str) -> AskResponse:
     question = question.strip()
     if not question:
         raise LLMError("empty_question", "Question is empty.", 422)
-    if provider() == "stub":
-        return _ask_stub(question)
     return _ask_bedrock(question)
 
 
@@ -158,60 +151,3 @@ def _ask_bedrock(question: str) -> AskResponse:
 
     raise LLMError("iteration_cap", f"The assistant needed more than {max_iterations} steps. Try a narrower question.")
 
-
-# ---------- Stub: clearly labelled, keyword routing, real tools, templated prose ----------
-
-STUB_WARNING = "STUB MODE: no LLM was called. A keyword router picked the tool and the answer is a template."
-
-
-def _approver_for(amount: float) -> str:
-    # Thresholds from policy §3.
-    if amount <= 5000:
-        return "the Cost Center Owner (up to 5,000)"
-    if amount <= 50000:
-        return "a Department Head (5,000.01 to 50,000)"
-    if amount <= 250000:
-        return "the Finance Director (50,000.01 to 250,000)"
-    return "the CFO, with a Procurement Excellence review (above 250,000)"
-
-
-def _fmt_groups(groups: list[dict]) -> str:
-    return "; ".join(
-        f"{' / '.join(str(v) for v in g['keys'].values()) + ': ' if g['keys'] else ''}"
-        f"{g['currency']} {g['value']:,.2f} ({g['invoice_count']} invoices)"
-        for g in groups
-    )
-
-
-def _ask_stub(question: str) -> AskResponse:
-    q = question.lower()
-    collector = EvidenceCollector()
-
-    if "approv" in q and (m := re.search(r"(\d[\d,]*(?:\.\d+)?)", q)) and "invoice" in q and "who" in q:
-        amount = float(m.group(1).replace(",", ""))
-        final = FinalAnswer(status="answered", policy_sections=["3"],
-                            answer=f"Per §3, an invoice of EUR {amount:,.2f} must be approved by {_approver_for(amount)}.")
-    elif "spain" in q or "spanish" in q:
-        _run_tool("aggregate", {"metric": "sum_amount", "filters": {"vendor_country": "Spain"}}, collector)
-        final = FinalAnswer(status="answered", policy_sections=["5.1"],
-                            answer="Spend with Spain-based vendors, per currency (not converted, §5.1): "
-                                   + _fmt_groups(collector.items[-1].groups) + ".")
-    elif "top" in q and "vendor" in q:
-        n = int(m.group(1)) if (m := re.search(r"top\s+(\d+)", q)) else 5
-        _run_tool("aggregate", {"metric": "sum_amount", "group_by": ["vendor_name"], "top_n": min(n, 20)}, collector)
-        final = FinalAnswer(status="answered", policy_sections=["5.1"],
-                            answer=f"Top {n} vendors by spend, ranked within each currency (not converted, §5.1): "
-                                   + _fmt_groups(collector.items[-1].groups) + ".")
-    elif "approver" in q and ("no " in q or "without" in q or "missing" in q):
-        filters = {"has_approver": False}
-        if "inactive" in q:
-            filters["vendor_status"] = "INACTIVE"
-        _run_tool("query_invoices", {"filters": filters, "sort_by": "amount"}, collector)
-        ev = collector.items[-1]
-        final = FinalAnswer(status="answered", policy_sections=["3.1"],
-                            answer=f"{ev.total_matched} invoices have no approver. Per §3.1 they must be held and may not be paid.")
-    else:
-        final = FinalAnswer(status="declined", policy_sections=[],
-                            answer="Stub mode only handles a few question shapes (approval thresholds, Spain spend, "
-                                   "top N vendors, invoices without an approver). Configure Bedrock for free-form questions.")
-    return _build_response(final, collector, [STUB_WARNING])

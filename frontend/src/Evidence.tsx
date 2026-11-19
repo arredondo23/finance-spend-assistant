@@ -18,7 +18,7 @@ export function Evidence({ r }: { r: AskResponse }) {
     <div className="evidence">
       <div className="badges">
         <span className="badge">Based on: {routeLabel(r.route)}</span>
-        <span className={r.llm.startsWith('stub') ? 'badge stub' : 'badge'}>Answered by: {r.llm}</span>
+        <span className="badge">Answered by: {r.llm}</span>
       </div>
 
       {r.warnings.length > 0 && (

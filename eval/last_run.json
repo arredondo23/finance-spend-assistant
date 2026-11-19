@@ -4,10 +4,10 @@
     "question": "What is our total spend with vendors based in Spain?",
     "pass": true,
     "fails": [],
-    "seconds": 8.3,
+    "seconds": 6.3,
     "response": {
       "status": "answered",
-      "answer": "Spend with Spain-based vendors (country from the vendor master) covers 49 invoices in 2025. I've reported it in each invoice's own currency:\n- EUR 1,576,971.22 across 30 invoices\n- GBP 646,618.51 across 12 invoices\n- USD 343,748.06 across 7 invoices\n\nNone of these invoices are credit notes. I can't give one combined figure. \u00a75.1 says non-EUR amounts are converted at the ECB reference rate on each invoice date, and those rates aren't in the data, so adding the currencies together isn't possible.",
+      "answer": "Spend with Spain-based vendors (country from the vendor master) in 2025 comes to 49 invoices. By currency: EUR 1,576,971.22 (30 invoices), GBP 646,618.51 (12 invoices) and USD 343,748.06 (7 invoices). None of these invoices are credit notes. These three totals can't be added into one figure. \u00a75.1 says non-EUR invoices are converted at the ECB reference rate on the invoice date, and those rates aren't in the data, so each currency is shown on its own.",
       "route": [
         "policy",
         "data"
@@ -123,10 +123,10 @@
     "question": "What are our top 5 vendors by total spend in 2025?",
     "pass": true,
     "fails": [],
-    "seconds": 10.9,
+    "seconds": 11.1,
     "response": {
       "status": "answered",
-      "answer": "I can't give one combined top 5, because ranking vendors across currencies would mean converting to EUR. Policy \u00a75.1 says to convert at the ECB reference rate on each invoice date, and those rates aren't in the data. So here are the top 5 for each currency, covering all 140 invoices from 2025. EUR: 1) BioReagent Direct 767,778.07 (13 invoices); 2) PharmaPrint Studios 721,133.08 (11); 3) Labtech Solutions GmbH 612,043.43 (11); 4) Stellar Facilities Mgmt 443,515.01 (8); 5) Helix Consulting AG 415,196.30 (10). GBP: 1) ClinSupply Iberia S.L. 428,218.78 (8); 2) PharmaPrint Studios 202,618.32 (3); 3) Quanta Cloud Services 177,084.00 (4); 4) BioReagent Direct 128,950.37 (3); 5) Crown Travel Partners 108,643.52 (4). USD: 1) BioReagent Direct 240,480.85 (3); 2) Labtech Solutions GmbH 150,427.40 (3); 3) PharmaPrint Studios 143,052.91 (3); 4) Helix Consulting AG 132,018.79 (3); 5) Stellar Facilities Mgmt 124,729.37 (2). Helix Consulting AG's EUR and USD totals each include one credit note (a negative amount), which lowers those figures. BioReagent Direct and PharmaPrint Studios appear in the top 5 for all three currencies, but their full spend can't be combined without the FX rates.",
+      "answer": "Invoices come in EUR, GBP and USD. The data has no exchange rates, and \u00a75.1 calls for the ECB rate on each invoice date, so I can't give one combined ranking. Here are the top 5 vendors in each currency, covering all 140 invoices from 2025.\n\nEUR: 1) BioReagent Direct: EUR 767,778.07 (13 invoices). 2) PharmaPrint Studios: EUR 721,133.08 (11). 3) Labtech Solutions GmbH: EUR 612,043.43 (11). 4) Stellar Facilities Mgmt: EUR 443,515.01 (8). 5) Helix Consulting AG: EUR 415,196.30 (10). Helix's total is net of 1 credit note.\n\nGBP: 1) ClinSupply Iberia S.L.: GBP 428,218.78 (8). 2) PharmaPrint Studios: GBP 202,618.32 (3). 3) Quanta Cloud Services: GBP 177,084.00 (4). 4) BioReagent Direct: GBP 128,950.37 (3). 5) Crown Travel Partners: GBP 108,643.52 (4).\n\nUSD: 1) BioReagent Direct: USD 240,480.85 (3). 2) Labtech Solutions GmbH: USD 150,427.40 (3). 3) PharmaPrint Studios: USD 143,052.91 (3). 4) Helix Consulting AG: USD 132,018.79 (3). Helix's total is net of 1 credit note. 5) Stellar Facilities Mgmt: USD 124,729.37 (2).\n\nBioReagent Direct and PharmaPrint Studios appear in the top 5 in all three currencies. Even so, the overall order can only be settled once amounts are converted to EUR.",
       "route": [
         "policy",
         "data"
@@ -145,10 +145,7 @@
             "group_by": [
               "vendor_name"
             ],
-            "filters": {
-              "date_from": "2025-01-01",
-              "date_to": "2025-12-31"
-            },
+            "filters": {},
             "top_n": 5,
             "sort_desc": true
           },
@@ -425,10 +422,10 @@
     "question": "Who is allowed to approve an invoice of EUR 60,000?",
     "pass": true,
     "fails": [],
-    "seconds": 3.6,
+    "seconds": 3.4,
     "response": {
       "status": "answered",
-      "answer": "Under the approval threshold table in \u00a73, an invoice of EUR 60,000 is in the EUR 50,000.01 \u2013 250,000 band, so the Finance Director must approve it. Under \u00a73.1, the approval is recorded in the approved_by field. An invoice with no approver record must be held and may not be paid. The approver also cannot be the person who requested the purchase (\u00a77.1), and no one may approve their own purchase at any amount (\u00a77.2).",
+      "answer": "An invoice of EUR 60,000 is in the EUR 50,000.01 \u2013 250,000 band of the approval threshold table, so the Finance Director must approve it (\u00a73). The approval is recorded in the approved_by field. If an invoice has no approver record, it must be held and may not be paid (\u00a73.1). The approver also cannot be the person who requested the purchase, and no one may approve their own purchase at any threshold (\u00a77.1, \u00a77.2).",
       "route": [
         "policy"
       ],
@@ -460,10 +457,10 @@
     "question": "Which invoices from inactive vendors have no approver?",
     "pass": true,
     "fails": [],
-    "seconds": 9.5,
+    "seconds": 8.5,
     "response": {
       "status": "answered",
-      "answer": "Three invoices from INACTIVE vendors have no approver. All three are from PharmaPrint Studios (V-1006, Spain, Marketing Services), and each has a PO number:\n- INV-20136 (2025-09-22, Cloud hosting): EUR 16,820.43, CC-RND-210, PO-71421\n- INV-20056 (2025-08-04, Marketing materials): EUR 82,190.82, CC-FIN-100, PO-73073\n- INV-20108 (2025-07-26, Facilities services): USD 41,611.73, CC-FIN-100, PO-73060\n\nThese invoices fail two policy rules:\n1. With no approver on record, all three must be held and may not be paid (\u00a73.1).\n2. Because the vendor is INACTIVE, they must be escalated to Procurement Excellence before processing (\u00a74.1).\n\nUnder the approval table (\u00a73), INV-20136 would need a Department Head and INV-20056 would need the Finance Director. The thresholds are in EUR, so INV-20108 (USD) would first need converting at the ECB rate on its invoice date (\u00a75.1). That rate isn't in the data, so I can't say which approver level it needs.",
+      "answer": "Three invoices from inactive vendors have no approver. All three are from PharmaPrint Studios (V-1006, Spain, INACTIVE), and all three have a PO number:\n- INV-20136 (2025-09-22): Cloud hosting, EUR 16,820.43, CC-RND-210, PO-71421\n- INV-20056 (2025-08-04): Marketing materials, EUR 82,190.82, CC-FIN-100, PO-73073\n- INV-20108 (2025-07-26): Facilities services, USD 41,611.73, CC-FIN-100, PO-73060\n\nWhat the policy requires: each invoice has two problems. Under \u00a73.1, an invoice with no approver record must be held and may not be paid. Under \u00a74.1, invoices from INACTIVE vendors must be escalated to Procurement Excellence before processing. Under the \u00a73 approval table, INV-20136 would need a Department Head and INV-20056 would need a Finance Director. The thresholds are in EUR, so INV-20108 (in USD) would have to be converted first. I can't do that because the ECB rate required by \u00a75.1 isn't in the data.",
       "route": [
         "policy",
         "data"
@@ -562,10 +559,10 @@
     "question": "Which EUR invoices over 50,000 come from vendors that are on hold, and what does policy require?",
     "pass": true,
     "fails": [],
-    "seconds": 11.4,
+    "seconds": 9.4,
     "response": {
       "status": "answered",
-      "answer": "I found 4 EUR invoices over 50,000 from vendors on hold, and all 4 are listed below. I only checked invoices in EUR, not GBP or USD. All 4 come from Crown Travel Partners (V-1010, UK, Travel), which has ON_HOLD status:\n- INV-20083 (2025-05-28): EUR 57,924.90, PO-75062, approved by m.garcia\n- INV-20127 (2025-09-28): EUR 56,778.97, PO-70841, approved by l.chen\n- INV-20130 (2025-10-08): EUR 53,097.78, PO-78011, approved by a.kowalski\n- INV-20106 (2025-07-02): EUR 51,953.02, PO-77840, approved by r.okafor\n\nWhat the policy requires:\n- Vendor status (\u00a74.1): only ACTIVE vendors may be paid. Invoices from ON_HOLD vendors must be escalated to Procurement Excellence before they are processed. That applies to all 4 invoices.\n- Approval level (\u00a73): each invoice is between EUR 50,000.01 and 250,000, so it needs Finance Director approval. Each one has an approver recorded (\u00a73.1), but the data doesn't show approvers' roles, so I can't confirm whether m.garcia, l.chen, a.kowalski or r.okafor is a Finance Director.\n- Purchase order (\u00a72.1): all 4 have a PO number. The data doesn't show whether each PO was issued before work began.\n- Segregation of duties (\u00a77): I can't check this, because the data has no requester field.\n\nSeparately, some descriptions (equipment maintenance, statistical analysis, software licence) don't fit a vendor categorised as Travel. That may be worth raising when the invoices are escalated.",
+      "answer": "Four EUR invoices over 50,000 come from ON_HOLD vendors. All four are from Crown Travel Partners (V-1010, UK), and the list is complete (4 of 4 returned). Only EUR invoices were checked; invoices in GBP and USD were not included.\n- INV-20083 (2025-05-28): EUR 57,924.90, PO-75062, approved by m.garcia\n- INV-20127 (2025-09-28): EUR 56,778.97, PO-70841, approved by l.chen\n- INV-20130 (2025-10-08): EUR 53,097.78, PO-78011, approved by a.kowalski\n- INV-20106 (2025-07-02): EUR 51,953.02, PO-77840, approved by r.okafor\n\nWhat the policy requires:\n- \u00a74.1: Payments may only go to ACTIVE vendors. Invoices from ON_HOLD vendors must be escalated to Procurement Excellence before they are processed, so all four should be escalated.\n- \u00a73: Each amount falls in the EUR 50,000.01\u2013250,000 band, so a Finance Director must approve it. Each invoice has an approver on record (\u00a73.1), but the data does not show whether these approvers are Finance Directors. Please check this.\n- \u00a72.1: All four have a PO reference, so none of them counts as maverick spend.",
       "route": [
         "policy",
         "data"
@@ -586,10 +583,6 @@
         {
           "section": "2.1",
           "text": "2.1 All purchases of goods or services with a value of **EUR 1,000 or above** require an approved Purchase Order (PO) issued **before** the supplier begins work or ships goods."
-        },
-        {
-          "section": "7",
-          "text": "## 7. Segregation of Duties\n7.1 The person approving an invoice may not be the requester of the underlying purchase.\n\n7.2 Self-approval is prohibited at all thresholds."
         }
       ],
       "data_evidence": [
@@ -685,10 +678,10 @@
     "question": "How many invoices are missing a PO number?",
     "pass": true,
     "fails": [],
-    "seconds": 8.8,
+    "seconds": 7.8,
     "response": {
       "status": "answered",
-      "answer": "21 of the 2025 invoices have no PO number: INV-20010, INV-20012, INV-20014, INV-20016, INV-20023, INV-20024, INV-20025, INV-20032, INV-20039, INV-20042, INV-20052, INV-20057, INV-20067, INV-20077, INV-20089, INV-20094, INV-20113, INV-20118, INV-20122, INV-20123 and INV-20128. None of them are credit notes. Under \u00a72.1, any purchase of EUR 1,000 or more needs a PO. Under \u00a72.2, invoices above that amount with no PO count as maverick spend. They must be flagged to the Cost Center owner and reported every quarter to the Finance Controls Committee. This count does not check which of the 21 are above EUR 1,000. Any in GBP or USD would first need converting at the ECB rate (\u00a75.1), and that rate isn't in the data. Some could also be covered by a blanket PO (\u00a72.3) or an emergency exception (\u00a79.1), but the data can't show that.",
+      "answer": "21 of the 2025 invoices have no PO number: INV-20010, INV-20012, INV-20014, INV-20016, INV-20023, INV-20024, INV-20025, INV-20032, INV-20039, INV-20042, INV-20052, INV-20057, INV-20067, INV-20077, INV-20089, INV-20094, INV-20113, INV-20118, INV-20122, INV-20123 and INV-20128. None of them are credit notes. This count covers all currencies. Under \u00a72.1, any purchase of EUR 1,000 or more needs a PO. Under \u00a72.2, invoices without a PO above EUR 1,000 count as maverick spend: they must be flagged to the Cost Center owner and reported every quarter to the Finance Controls Committee. I haven't checked which of these 21 invoices are above that threshold. For GBP or USD invoices, that check would also need the ECB rate on the invoice date (\u00a75.1), and that rate isn't in the data. \u00a79.1 lets emergency purchases go ahead without a PO, but the data doesn't show which purchases were emergencies.",
       "route": [
         "policy",
         "data"
@@ -701,10 +694,6 @@
         {
           "section": "2.2",
           "text": "2.2 Invoices received without a valid PO reference (\"maverick spend\") above the EUR 1,000 threshold must be flagged to the Cost Center owner and reported quarterly to the Finance Controls Committee."
-        },
-        {
-          "section": "2.3",
-          "text": "2.3 Recurring services (e.g., cloud hosting, facilities) may operate under a blanket PO, renewed annually."
         },
         {
           "section": "5.1",
@@ -772,10 +761,10 @@
     "question": "What was our total EUR-denominated spend in Q1 2025 (January to March)?",
     "pass": true,
     "fails": [],
-    "seconds": 6.6,
+    "seconds": 6.4,
     "response": {
       "status": "answered",
-      "answer": "Total spend on invoices billed in EUR in Q1 2025 (invoice dates 1 January to 31 March 2025) was EUR 1,186,505.33, across 23 invoices. None of them are credit notes. This covers EUR invoices only: GBP and USD invoices are left out because the data has no FX rates. Converting them would need the ECB reference rate for each invoice date (\u00a75.1), so a Group-wide total in EUR can't be calculated. I can give Q1 totals for GBP and USD separately if you need them.",
+      "answer": "Total EUR-denominated spend in Q1 2025 (invoice dates 1 January to 31 March 2025) was EUR 1,186,505.33, across 23 invoices. None of these invoices are credit notes, so the total contains no negative amounts. Only invoices issued in EUR are counted. GBP and USD invoices are left out, not converted, because \u00a75.1 requires the ECB rate on each invoice date and the data doesn't include those rates. I can give the Q1 GBP and USD totals separately if you need them.",
       "route": [
         "policy",
         "data"
@@ -847,10 +836,10 @@
     "question": "Were any invoices approved by the same person who requested them?",
     "pass": true,
     "fails": [],
-    "seconds": 4.5,
+    "seconds": 4.3,
     "response": {
       "status": "declined",
-      "answer": "I can't answer this from the available data. The invoice records have an approver field (approved_by) but no requester field, so I can't compare the two or spot self-approval. The rules in \u00a77.1 (the approver may not be the requester) and \u00a77.2 (self-approval is prohibited at all thresholds) therefore can't be tested here. I also won't guess who the requester was from cost centers or approvers. I can help with related checks instead: listing invoices that have no approver (\u00a73.1), checking whether an invoice's approver matches the level required for its amount in the \u00a73 table (thresholds are in EUR, so GBP and USD invoices would need conversion first), or breaking invoices down by approver.",
+      "answer": "I can't answer this from the available data. To check self-approval you need to know who requested each purchase, and the invoice data has no requester field. It only records the approver (approved_by). That means I can't test the segregation-of-duties rules: \u00a77.1 says the approver may not be the requester, and \u00a77.2 bans self-approval at every threshold. I also won't guess requesters from cost centers or approvers. Here's what I can check instead: invoices with no approver on record (\u00a73.1 says these must be held), invoices grouped by approver, or whether an approver's invoices fall in amount bands that need a more senior approver under \u00a73 (thresholds are in EUR, so I'd check each currency separately).",
       "route": [
         "policy"
       ],
@@ -877,7 +866,7 @@
     "seconds": 4.4,
     "response": {
       "status": "declined",
-      "answer": "I can't tell which invoices were paid late. The data has no payment status, payment dates or receipt dates. The invoice records only include the invoice date, vendor, description, amount, currency, cost center, PO number and approver. Without those dates, I can't check invoices against the standard 60-days-net terms in \u00a75.2, which run from invoice receipt, not from the invoice date. Here is what I can answer instead: which invoices have no approver and must be held (\u00a73.1), which have no PO at or above EUR 1,000 (\u00a72.1\u20132.2), which come from ON_HOLD or INACTIVE vendors and need escalation (\u00a74.1), and which are credit notes (\u00a76.1).",
+      "answer": "I can't tell which invoices were paid late. The data has no payment status, payment date or receipt date. It only holds invoice dates, amounts, POs, approvers and vendor details. \u00a75.2 sets standard payment terms of 60 days net from the date the invoice is received, but without payment or receipt dates nobody can check against that rule. Here's what I can check instead: invoices missing an approver, which \u00a73.1 says must be held; invoices of EUR 1,000 or more with no PO, which \u00a72.1\u20132.2 flag as maverick spend; invoices from vendors that are ON_HOLD or INACTIVE, which \u00a74.1 says must be escalated; and credit notes, which \u00a76.1 says must be matched to the original invoice.",
       "route": [
         "policy"
       ],
@@ -897,10 +886,10 @@
     "question": "How much did we spend with Acme Widgets Ltd?",
     "pass": true,
     "fails": [],
-    "seconds": 8.1,
+    "seconds": 7.4,
     "response": {
       "status": "answered",
-      "answer": "I couldn't find any spend with Acme Widgets Ltd. No vendor with \"Acme\" in its name is in the vendor master, and no 2025 invoices match that vendor name, so I have no spend to report. The vendor may be listed under a different legal or trading name. If you know the vendor ID or another name for it, I can search again, or I can list all vendors in the master for you to check.",
+      "answer": "I couldn't find any vendor called Acme Widgets Ltd. There is no vendor with \"Acme\" in its name in the vendor master, and no 2025 invoices match that name, so there is no spend to report. If the vendor is listed under a different legal name or vendor ID, send it to me and I'll look up the spend for that.",
       "route": [
         "data"
       ],

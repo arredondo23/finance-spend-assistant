@@ -101,7 +101,7 @@ def to_records(df: pd.DataFrame, columns: list[str] = INVOICE_COLUMNS) -> list[d
     for rec in df[columns].to_dict(orient="records"):
         row = {}
         for k, v in rec.items():
-            if v is None or (isinstance(v, float) and pd.isna(v)):
+            if pd.isna(v):  # None, NaN, and NaT (missing fx_rate_date on EUR rows)
                 row[k] = None
             elif hasattr(v, "isoformat"):
                 row[k] = v.isoformat()

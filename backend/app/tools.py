@@ -48,7 +48,8 @@ class GetVendorsArgs(BaseModel):
 
 def query_invoices(args: QueryInvoicesArgs) -> dict:
     df = data.filter_invoices(args.filters)
-    df = df.sort_values(args.sort_by, ascending=not args.sort_desc, kind="stable")
+    sort_col = "amount_eur" if args.sort_by == "amount" else args.sort_by
+    df = df.sort_values(sort_col, ascending=not args.sort_desc, kind="stable")
     rows = data.to_records(df.head(args.limit))
     return {"total_matched": len(df), "returned": len(rows), "truncated": len(df) > len(rows), "rows": rows}
 
@@ -86,7 +87,7 @@ TOOLS: dict[str, Tool] = {
         "and is_credit_note (amount < 0). Missing PO or approver is null. "
         "`amount` is in the invoice's own currency; `amount_eur` is the EUR equivalent at the ECB rate `fx_rate` "
         "published on `fx_rate_date` (null for EUR invoices). min_amount and max_amount filter on amount_eur, so "
-        "EUR policy thresholds apply to every currency without a currency filter. "
+        "EUR policy thresholds apply to every currency without a currency filter. sort_by 'amount' sorts on amount_eur. "
         "This tool does not compute totals, counts across groups, or rankings: use `aggregate` for those. "
         "Results are capped by `limit` (max 50); check `total_matched` and `truncated` before claiming a list is complete.",
     ),
